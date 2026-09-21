@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sitelemetry Audit settings</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <img src="../../icons/icon48.png" width="32" height="32" alt="">
+      <h1 data-i18n="optionsTitle">Sitelemetry Audit settings</h1>
+    </header>
+
+    <section class="card">
+      <h2 data-i18n="apiKeyLabel"></h2>
+      <p class="muted small" data-i18n="apiKeyHelp"></p>
+      <div class="field-row">
+        <input id="api-key" type="password" autocomplete="off" spellcheck="false" data-i18n-placeholder="apiKeyPlaceholder" data-i18n-aria-label="apiKeyLabel">
+        <button id="toggle-key" class="button" type="button" data-i18n="showKey"></button>
+      </div>
+      <p class="small"><a id="get-key-link" target="_blank" rel="noopener" data-i18n="getKeyLink"></a></p>
+
+      <h2 class="spaced" data-i18n="baseUrlLabel"></h2>
+      <p class="muted small" data-i18n="baseUrlHelp"></p>
+      <input id="base-url" type="url" autocomplete="off" spellcheck="false" placeholder="https://sitelemetry.com" data-i18n-aria-label="baseUrlLabel">
+      <p id="base-url-warning" class="warning small" hidden data-i18n="baseUrlWarning"></p>
+
+      <div class="actions">
+        <button id="save" class="button primary" type="button" data-i18n="saveButton"></button>
+        <button id="test" class="button" type="button" data-i18n="testButton"></button>
+        <button id="remove-key" class="button danger" type="button" data-i18n="removeKey"></button>
+      </div>
+      <p id="status" class="status small" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="noticeTitle"></h2>
+      <p data-i18n="noticeBody"></p>
+      <p id="ack-status" class="muted small"></p>
+      <button id="reset-ack" class="button" type="button" data-i18n="resetAck"></button>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="privacyTitle"></h2>
+      <ul class="small">
+        <li data-i18n="privacyItemSent"></li>
+        <li data-i18n="privacyItemStored"></li>
+        <li data-i18n="privacyItemNoTracking"></li>
+        <li data-i18n="privacyItemRemove"></li>
+      </ul>
+    </section>
+
+    <footer class="page-footer muted small">
+      <span id="version"></span>
+      <a id="site-link" target="_blank" rel="noopener">sitelemetry.com</a>
+    </footer>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

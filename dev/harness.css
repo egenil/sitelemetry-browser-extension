@@ -1,0 +1,7 @@
+body { margin: 0; font-family: system-ui, sans-serif; background: #d9dde3; }
+.bar { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 8px 14px; background: #1f2937; color: #e5e7eb; font-size: 13px; }
+.bar a { color: #93c5fd; text-decoration: none; }
+.bar a:hover { text-decoration: underline; }
+iframe { display: block; margin: 20px; border: 0; background: #fff; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); border-radius: 8px; }
+iframe.popup { width: 380px; height: 640px; }
+iframe.options { width: 760px; height: 920px; }

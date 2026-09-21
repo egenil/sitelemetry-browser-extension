@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sitelemetry Audit</title>
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="header">
+    <img class="logo" src="../../icons/icon32.png" width="22" height="22" alt="">
+    <div class="header-text">
+      <h1 data-i18n="popupTitle">Sitelemetry Audit</h1>
+      <p id="site" class="site"></p>
+    </div>
+    <button id="open-settings" class="icon-button" type="button" data-i18n-title="settingsLink" data-i18n-aria-label="settingsLink">&#9881;</button>
+  </header>
+
+  <main class="main">
+    <section id="view-unsupported" class="card" hidden>
+      <p data-i18n="notAuditable"></p>
+    </section>
+
+    <section id="view-setup" class="card" hidden>
+      <h2 data-i18n="setupTitle"></h2>
+      <p data-i18n="setupBody"></p>
+      <p id="setup-facts" class="muted small"></p>
+      <div class="actions">
+        <button id="setup-open-settings" class="button primary" type="button" data-i18n="openSettings"></button>
+        <a id="signup-link" class="button" target="_blank" rel="noopener" data-i18n="signUpFree"></a>
+      </div>
+    </section>
+
+    <section id="view-notice" class="card notice" hidden>
+      <h2 data-i18n="noticeTitle"></h2>
+      <p data-i18n="noticeBody"></p>
+      <label class="check">
+        <input id="ack" type="checkbox">
+        <span data-i18n="noticeCheckbox"></span>
+      </label>
+    </section>
+
+    <section id="view-running" class="card running" hidden>
+      <div class="running-head">
+        <span class="spinner" aria-hidden="true"></span>
+        <h2 data-i18n="runningTitle"></h2>
+      </div>
+      <p id="running-phase" class="muted small"></p>
+      <p id="running-job" class="muted small mono"></p>
+      <p class="small" data-i18n="runningBody"></p>
+    </section>
+
+    <section id="view-result" hidden></section>
+
+    <p id="error" class="error small" hidden></p>
+  </main>
+
+  <footer class="footer">
+    <button id="audit" class="button primary wide" type="button" hidden></button>
+    <p class="small muted" data-i18n="sentNote"></p>
+  </footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

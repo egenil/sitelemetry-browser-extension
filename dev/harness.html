@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--
+  Development harness: renders the popup or the options page in a normal tab with a
+  stubbed chrome.* API (dev/chrome-stub.js), so layout and copy can be checked
+  without loading the extension. Not part of the package.
+
+  Serve the repository root (node dev/serve.mjs) and open /dev/harness.html with:
+    ?scenario=completed|free|full|quota|plan|verify|consent|unauthorized|transport|running|stalled
+    ?scenario=nokey        no API key stored (setup view)
+    ?scenario=notacked     key stored, ownership notice not yet acknowledged
+    ?scenario=unsupported  active tab is a browser page
+    ?page=options          the settings page instead of the popup
+    &url=https://www.example.com/path   the active tab URL
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sitelemetry Audit harness</title>
+  <link rel="stylesheet" href="harness.css">
+</head>
+<body>
+  <nav class="bar">
+    <span>Popup:</span>
+    <a href="?scenario=completed">completed</a>
+    <a href="?scenario=free">free (partial + plan box)</a>
+    <a href="?scenario=full">full</a>
+    <a href="?scenario=quota">quota</a>
+    <a href="?scenario=plan">plan</a>
+    <a href="?scenario=verify">verify</a>
+    <a href="?scenario=consent">consent</a>
+    <a href="?scenario=unauthorized">unauthorized</a>
+    <a href="?scenario=transport">transport</a>
+    <a href="?scenario=running">running</a>
+    <a href="?scenario=stalled">stalled (check again)</a>
+    <a href="?scenario=nokey">no key</a>
+    <a href="?scenario=notacked">not acknowledged</a>
+    <a href="?scenario=unsupported">unsupported page</a>
+    <span>Page:</span>
+    <a href="?page=options">options</a>
+  </nav>
+  <iframe id="frame" title="extension page"></iframe>
+  <script type="module" src="harness.js"></script>
+</body>
+</html>
