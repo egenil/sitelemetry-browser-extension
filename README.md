@@ -10,7 +10,9 @@ Audit only websites you own or are explicitly authorized to test. Every audit is
 
 ## Install
 
-From the stores (once published): Chrome Web Store or Microsoft Edge Add-ons, search for "Sitelemetry Audit".
+Chrome: install [Sitelemetry Audit from the Chrome Web Store](https://chromewebstore.google.com/detail/sitelemetry-audit/mjnfjbacfigionnnfbgjmleddcgmnjgf).
+
+Microsoft Edge: the Edge Add-ons listing is not published yet. Until it is, Edge can install the same extension from the Chrome Web Store link above after you turn on **Allow extensions from other stores** on `edge://extensions`.
 
 Unpacked, for development or review:
 
