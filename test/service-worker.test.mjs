@@ -146,7 +146,7 @@ test('a job that outlives the deadline keeps its poll arguments and is resumed w
   const target = 'https://ok.example';
   const pollArguments = { target: 'https://ok.example/', jobId: 'mj_seeded' };
   const chrome = stubChrome(connected({
-    jobs: { [target]: storedJob(target, { jobId: 'mj_seeded', pollArguments, dispatched: true, polls: 3, deadline: Date.now() - 1 }) }
+    jobs: { [target]: storedJob(target, { jobId: 'mj_seeded', pollArguments, dispatched: true, polls: 3, busy: true, deadline: Date.now() - 1 }) }
   }));
   const before = dispatches();
   await loadWorker();
@@ -160,6 +160,7 @@ test('a job that outlives the deadline keeps its poll arguments and is resumed w
   // "Check again" in the popup resumes that job; it must not start another audit.
   const response = await sendStart(chrome, { origin: target, tabId: 3 });
   assert.deepEqual([response.ok, response.resumed, response.job.stalled], [true, true, false]);
+  assert.equal(response.job.busy, false, 'a busy flag from the earlier attempt is not shown for the new one');
   assert.ok(response.job.deadline > Date.now(), 'the deadline is extended for the new attempt');
   const entry = await waitFor(() => (chrome.store.results?.[target]?.model.reason !== 'timeout' ? chrome.store.results[target] : null), 'the resumed result');
   assert.equal(entry.model.reason, 'audit_job_argument_mismatch', 'the seeded job id is answered by the service');
@@ -213,5 +214,26 @@ test('a wake-up that arrives while a request is in flight keeps the job waking t
     for (const response of held) response.destroy();
     await waitFor(() => chrome.store.jobs?.[target]?.stalled, 'the kept job').catch(() => {});
     await new Promise((resolve) => stallingServer.close(resolve));
+  }
+});
+
+test('a running job never stores the service text written for MCP clients', async () => {
+  const target = 'https://ok.example';
+  const chrome = stubChrome(connected());
+  const snapshots = [];
+  const set = globalThis.chrome.storage.local.set;
+  globalThis.chrome.storage.local.set = async (items) => {
+    if (items.jobs) snapshots.push(JSON.stringify(items.jobs));
+    return set(items);
+  };
+  await loadWorker();
+
+  const response = await sendStart(chrome, { origin: target, tabId: null });
+  assert.equal(response.ok, true);
+  await waitFor(() => chrome.store.results?.[target], 'the stored result');
+  assert.ok(snapshots.some((snapshot) => snapshot.includes('"jobId":"mj_')), 'running states were persisted');
+  for (const snapshot of snapshots) {
+    assert.doesNotMatch(snapshot, /still running|same tool|pollArguments unchanged/, 'no model-facing text in the stored job');
+    assert.doesNotMatch(snapshot, /"phase"/);
   }
 });

@@ -15,17 +15,17 @@ powershell -ExecutionPolicy Bypass -File scripts/pack.ps1
 ## By hand
 
 ```powershell
-Compress-Archive -Path manifest.json, _locales, icons, src, LICENSE -DestinationPath dist/sitelemetry-audit-0.1.0.zip -CompressionLevel Optimal
+Compress-Archive -Path manifest.json, _locales, icons, src, LICENSE -DestinationPath dist/sitelemetry-audit-0.1.1.zip -CompressionLevel Optimal
 ```
 
 Verify the entry names:
 
 ```powershell
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::OpenRead("dist/sitelemetry-audit-0.1.0.zip").Entries.FullName
+[System.IO.Compression.ZipFile]::OpenRead("dist/sitelemetry-audit-0.1.1.zip").Entries.FullName
 ```
 
-On PowerShell 7 (`pwsh`) or with the built-in `tar` (`tar -a -c -f dist/sitelemetry-audit-0.1.0.zip manifest.json _locales icons src LICENSE`) the names are already correct.
+On PowerShell 7 (`pwsh`) or with the built-in `tar` (`tar -a -c -f dist/sitelemetry-audit-0.1.1.zip manifest.json _locales icons src LICENSE`) the names are already correct.
 
 ## Checklist before uploading
 

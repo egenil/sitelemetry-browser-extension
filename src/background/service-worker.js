@@ -104,8 +104,8 @@ async function drive(origin) {
         jobId: state.jobId,
         deadline: job.deadline,
         sleep,
-        onRunning: (update) => persist({ jobId: update.jobId, pollArguments: update.pollArguments, retryAfterMs: update.retryAfterMs, phase: update.phase, polls: update.polls, busy: false }),
-        onBusy: (update) => persist({ busy: true, phase: update.message || '' })
+        onRunning: (update) => persist({ jobId: update.jobId, pollArguments: update.pollArguments, retryAfterMs: update.retryAfterMs, polls: update.polls, busy: false }),
+        onBusy: () => persist({ busy: true })
       });
     } catch (error) {
       run = { outcome: 'error', error, tool: job.tool, jobId: state.jobId };
@@ -146,9 +146,9 @@ async function startAudit({ origin, tabId, kind = DEFAULT_KIND }) {
   // A stalled job is resumed, never restarted: its stored pollArguments retrieve the
   // audit Sitelemetry is already running instead of paying a scan for a new one.
   const job = existing
-    ? { ...existing, stalled: false, tabId: tab ?? existing.tabId, updatedAt: now, deadline: now + DEFAULT_DEADLINE_MS }
+    ? { ...existing, stalled: false, busy: false, tabId: tab ?? existing.tabId, updatedAt: now, deadline: now + DEFAULT_DEADLINE_MS }
     : {
-      origin: target, target, kind, tool, jobId: null, pollArguments: null, retryAfterMs: null, phase: '', polls: 0,
+      origin: target, target, kind, tool, jobId: null, pollArguments: null, retryAfterMs: null, polls: 0,
       busy: false, dispatched: false, tabId: tab, startedAt: now, updatedAt: now, deadline: now + DEFAULT_DEADLINE_MS
     };
   await setJob(target, job);

@@ -3,9 +3,9 @@
 // never leaves this device except as the bearer token to the configured base URL.
 import { localizeDocument, t } from '../shared/i18n.js';
 import { APP_URL, DEFAULT_BASE_URL, SITE_URL } from '../shared/links.js';
-import { McpHttpError, createMcpClient } from '../shared/mcp-client.js';
+import { createMcpClient } from '../shared/mcp-client.js';
 import { getSettings, normalizeBaseUrl, saveSettings } from '../shared/storage.js';
-import { formatTimestamp } from '../shared/text.js';
+import { connectionErrorText, formatTimestamp } from '../shared/text.js';
 import { EXTENSION_VERSION } from '../shared/version.js';
 
 const $ = (id) => document.getElementById(id);
@@ -56,8 +56,7 @@ async function testConnection() {
     const server = [result?.serverInfo?.name, result?.serverInfo?.version].filter(Boolean).join(' ') || client.endpoint;
     setStatus(t('testOk', [server, result?.protocolVersion || '?']), 'ok');
   } catch (error) {
-    if (error instanceof McpHttpError && (error.status === 401 || error.status === 403)) setStatus(t('testUnauthorized', [error.status]), 'error');
-    else setStatus(t('testFailed', [error?.message || String(error)]), 'error');
+    setStatus(connectionErrorText(error, t), 'error');
   } finally {
     $('test').disabled = false;
   }

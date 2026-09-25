@@ -131,9 +131,10 @@ export function interpretOutcome(run, { kind, target }) {
   if (run.outcome === 'error') {
     const { error } = run;
     if (error instanceof McpHttpError) {
-      if (error.status === 401 || error.status === 403) {
-        return { ...model, reason: 'unauthorized', httpStatus: error.status, message: error.message };
-      }
+      // 401 is a rejected key. 403 is a refusal that can have other causes, so it is
+      // reported as such. Both carry only the text of the service's JSON error body.
+      if (error.status === 401) return { ...model, reason: 'unauthorized', httpStatus: 401, message: error.serviceMessage || '' };
+      if (error.status === 403) return { ...model, reason: 'forbidden', httpStatus: 403, message: error.serviceMessage || '' };
       const status = error.status === 402 ? 'plan_required' : statusFromText(error.message, error.code);
       return { ...model, status: status === 'verification_required' ? 'blocked' : status, reason: error.code || `http_${error.status}`, httpStatus: error.status, message: error.message };
     }

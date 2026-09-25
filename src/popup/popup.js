@@ -2,15 +2,16 @@
 // the running-job view. All network work happens in the service worker; the popup
 // reads chrome.storage.local and re-renders when it changes.
 import { applyBadge } from '../shared/badge.js';
+import { buildFixPrompt } from '../shared/fix-prompt.js';
 import { localizeDocument, t } from '../shared/i18n.js';
 import { SIGNUP_URL } from '../shared/links.js';
 import { SEVERITIES, isMeasured, sortBySeverity } from '../shared/outcome.js';
 import { freePlan, loadPlans } from '../shared/plans.js';
 import { getJob, getPlansCache, getResult, getSettings, originOf, saveSettings, setPlansCache } from '../shared/storage.js';
-import { formatTimestamp, notMeasuredText, planSection, problemText, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
+import { formatTimestamp, notMeasuredText, planSection, problemText, runningPhaseKey, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
 
 const MAX_FINDINGS = 10;
-const state = { tab: null, origin: null, settings: null, job: null, result: null, plans: null, error: null, busy: false };
+const state = { tab: null, origin: null, settings: null, job: null, result: null, plans: null, error: null, busy: false, copy: null, promptOpen: false, shownResult: null };
 const $ = (id) => document.getElementById(id);
 
 function el(tag, props = {}, children = []) {
@@ -44,6 +45,69 @@ function renderFinding(finding) {
   row('fixLabel', finding.fix, 'fix');
   details.append(el('div', { class: 'finding-body' }, [list]));
   return details;
+}
+
+// Last resort when the async clipboard API is refused: a selected, off-screen
+// textarea and the copy command, still inside the click's user gesture.
+function copyWithSelection(text) {
+  const area = el('textarea', { class: 'offscreen', readonly: '', 'aria-hidden': 'true', tabindex: '-1' });
+  const previous = document.activeElement;
+  area.value = text;
+  document.body.append(area);
+  area.select();
+  let copied = false;
+  try { copied = document.execCommand('copy'); } catch { copied = false; }
+  area.remove();
+  previous?.focus?.();
+  return copied;
+}
+
+// The copy result is written into the existing live region, so screen readers
+// announce it and the button keeps keyboard focus (the view is not rebuilt).
+function showCopyStatus(status, copied) {
+  status.classList.toggle('error', !copied);
+  status.textContent = t(copied ? 'fixPromptCopied' : 'fixPromptCopyFailed');
+}
+
+async function copyFixPrompt(entry, ui) {
+  const text = buildFixPrompt(entry, { t });
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    copied = true;
+  } catch {
+    copied = copyWithSelection(text);
+  }
+  state.copy = { finishedAt: entry.finishedAt, copied };
+  showCopyStatus(ui.status, copied);
+  if (!copied) ui.details.open = true;
+}
+
+// "Copy AI fix prompt": the prompt is built here from the stored result and only
+// ever goes to the clipboard. The same text is offered in a read-only field.
+function renderFixPrompt(entry) {
+  const box = el('div', { class: 'prompt-box' });
+  const button = el('button', { class: 'button', type: 'button', text: t('fixPromptButton') });
+  const status = el('p', { class: 'small prompt-status', role: 'status', 'aria-live': 'polite' });
+  const feedback = state.copy?.finishedAt === entry.finishedAt ? state.copy : null;
+  if (feedback) showCopyStatus(status, feedback.copied);
+  box.append(button, status);
+  box.append(el('p', { class: 'small muted', text: t('fixPromptHint') }));
+  const details = el('details', { class: 'prompt-details' });
+  const area = el('textarea', { class: 'prompt-text', readonly: '', rows: '8', spellcheck: 'false', 'aria-label': t('fixPromptTextLabel') });
+  const fill = () => { if (!area.value) area.value = buildFixPrompt(entry, { t }); };
+  details.append(el('summary', { class: 'small', text: t('fixPromptShow') }), area);
+  details.addEventListener('toggle', () => {
+    state.promptOpen = details.open;
+    if (details.open) fill();
+  });
+  if (state.promptOpen) {
+    fill();
+    details.open = true;
+  }
+  box.append(details);
+  button.addEventListener('click', () => copyFixPrompt(entry, { status, details }));
+  return box;
 }
 
 function renderResult(entry) {
@@ -95,6 +159,7 @@ function renderResult(entry) {
       if (!model.notMeasured.length) list.append(el('li', { text: t('nmUnknown') }));
       card.append(list);
     }
+    card.append(renderFixPrompt(entry));
   } else {
     const problem = problemText(model, t);
     if (problem) card.append(el('p', { text: problem }));
@@ -151,12 +216,20 @@ function render() {
   audit.disabled = running || state.busy || (!acknowledged && !$('ack').checked);
 
   if (running) {
-    $('running-phase').textContent = job.busy ? t('busyPhase') : job.phase || t('runningStarting');
+    $('running-phase').textContent = t(runningPhaseKey(job));
     $('running-job').textContent = job.jobId ? t('jobLabel', [job.jobId]) : '';
   }
+  // The result view is rebuilt only when what it shows changed, so an unrelated
+  // storage update does not reset focus, the open prompt field or its selection.
   const resultView = $('view-result');
-  resultView.replaceChildren();
-  if (result && !running) resultView.append(renderResult(result));
+  const shown = result && !running ? result : null;
+  if (!shown) {
+    resultView.replaceChildren();
+    state.shownResult = null;
+  } else if (state.shownResult?.finishedAt !== shown.finishedAt || state.shownResult.plans !== state.plans) {
+    resultView.replaceChildren(renderResult(shown));
+    state.shownResult = { finishedAt: shown.finishedAt, plans: state.plans };
+  }
 
   const free = freePlan(state.plans);
   $('setup-facts').textContent = free && free.securityScans != null ? t('noAccountHint', [free.securityScans]) : t('noAccountHintNoFacts');
@@ -169,8 +242,10 @@ function render() {
 async function refresh() {
   state.settings = await getSettings();
   if (state.origin) {
+    const shown = state.result?.finishedAt;
     state.job = await getJob(state.origin);
     state.result = await getResult(state.origin);
+    if (state.result?.finishedAt !== shown) state.promptOpen = false;
   }
   render();
 }

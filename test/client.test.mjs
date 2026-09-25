@@ -65,3 +65,13 @@ test('a 429 answer carries retry-after', async () => {
     await busy.close();
   }
 });
+
+test('an HTTP error keeps the service message only from a JSON body', async () => {
+  const reply = (status, body, type) => async () => new Response(body, { status, headers: { 'content-type': type } });
+  const json = createMcpClient({ baseUrl: 'https://sitelemetry.test', apiKey: 'k', fetchImpl: reply(403, JSON.stringify({ error: 'Not allowed.' }), 'application/json') });
+  await assert.rejects(json.initialize(), (error) => error instanceof McpHttpError && error.status === 403 && error.serviceMessage === 'Not allowed.');
+  const page = createMcpClient({ baseUrl: 'https://sitelemetry.test', apiKey: 'k', fetchImpl: reply(403, '<html>Access denied</html>', 'text/html') });
+  await assert.rejects(page.initialize(), (error) => error instanceof McpHttpError && error.status === 403 && error.serviceMessage === '' && /Access denied/.test(error.message));
+  const empty = createMcpClient({ baseUrl: 'https://sitelemetry.test', apiKey: 'k', fetchImpl: reply(403, '', 'text/plain') });
+  await assert.rejects(empty.initialize(), (error) => error.serviceMessage === '' && error.message === 'HTTP 403');
+});

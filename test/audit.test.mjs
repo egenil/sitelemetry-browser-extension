@@ -27,9 +27,10 @@ test('runAudit re-sends pollArguments unchanged, waits retryAfterMs and reports 
     { structuredContent: { status: 'completed', score: 90, findings: [] } }
   ];
   const client = { callTool: async (name, args) => { calls.push({ name, args }); return responses.shift(); } };
+  const logs = [];
   const run = await runAudit({
     client, tool: AUDIT_TOOLS.security, args: { target: 'https://ok.example' }, deadline: Date.now() + 60_000,
-    sleep: async (ms) => waits.push(ms), minWaitMs: 100, onRunning: async (state) => states.push(state)
+    sleep: async (ms) => waits.push(ms), minWaitMs: 100, onRunning: async (state) => states.push(state), log: (line) => logs.push(line)
   });
   assert.equal(run.outcome, 'result');
   assert.equal(run.polls, 2);
@@ -38,7 +39,10 @@ test('runAudit re-sends pollArguments unchanged, waits retryAfterMs and reports 
   assert.deepEqual(calls[1].args, pollArguments);
   assert.deepEqual(calls[2].args, pollArguments);
   assert.deepEqual(waits, [250, 100]);
-  assert.deepEqual(states.map((s) => [s.jobId, s.retryAfterMs, s.phase, s.polls]), [['mj_1', 250, 'Queued for capacity.', 1], ['mj_1', 50, 'Executing.', 2]]);
+  assert.deepEqual(states.map((s) => [s.jobId, s.retryAfterMs, s.polls]), [['mj_1', 250, 1], ['mj_1', 50, 2]]);
+  // The service's running text is written for MCP clients: it reaches the log, never the caller.
+  assert.ok(states.every((s) => !('phase' in s) && !JSON.stringify(s).includes('Queued')), 'no server text in the running state');
+  assert.ok(logs.includes('Sitelemetry: Queued for capacity.'));
   assert.deepEqual(states[0].pollArguments, pollArguments);
   assert.equal(phaseLine(responses[0] ?? { content: [{ type: 'text', text: 'x\ny' }] }), 'x');
 });
@@ -69,8 +73,10 @@ test('runAudit waits on 429 and on a busy account, and gives up on non-transient
       return { structuredContent: { status: 'completed', findings: [] } };
     }
   };
-  const run = await runAudit({ client: flaky, tool: 'audit_security', args: { target: 'https://x.example' }, deadline: Date.now() + 60_000, sleep: async (ms) => waits.push(ms), minWaitMs: 1 });
+  const busyStates = [];
+  const run = await runAudit({ client: flaky, tool: 'audit_security', args: { target: 'https://x.example' }, deadline: Date.now() + 60_000, sleep: async (ms) => waits.push(ms), minWaitMs: 1, onBusy: async (state) => busyStates.push(state) });
   assert.equal(run.outcome, 'result');
+  assert.deepEqual(busyStates, [{ jobId: null, retryAfterMs: 2000 }, { jobId: null, retryAfterMs: 15_000 }], 'busy states carry no server text');
   assert.equal(attempts, 4);
   assert.deepEqual(waits, [2000, 15_000, 4000]);
 

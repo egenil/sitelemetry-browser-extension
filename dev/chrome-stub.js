@@ -87,6 +87,7 @@
       case 'verify': return interpretOutcome({ outcome: 'result', tool, result: gate('target_verification_required', 'Audit not started. No audit quota was used. Verify ownership of this target in Sitelemetry or Google Search Console before retrying. No plan change is required.') }, context);
       case 'consent': return interpretOutcome({ outcome: 'result', tool, result: gate('authorization_consent_required', 'Audit not started. No audit quota was used. Review and accept the current audit authorization terms in your account before retrying.') }, context);
       case 'unauthorized': return interpretOutcome({ outcome: 'error', tool, error: new McpHttpError(401, { error: 'Unauthorized. Provide a Sitelemetry MCP API key as a Bearer token.' }, null) }, context);
+      case 'forbidden': return interpretOutcome({ outcome: 'error', tool, error: new McpHttpError(403, { error: 'This request is not allowed for the connected account.' }, null) }, context);
       case 'transport': return interpretOutcome({ outcome: 'error', tool, error: new TypeError('Failed to fetch') }, context);
       default: return interpretOutcome({ outcome: 'result', tool, jobId: 'mj_demo', result: await fixture('security-completed.json') }, context);
     }
@@ -97,9 +98,9 @@
       if (message?.type !== 'audit:start') return { ok: true };
       const origin = message.origin;
       const now = Date.now();
-      const job = { origin, target: origin, kind: 'security', tool: 'audit_security', jobId: null, pollArguments: null, phase: '', polls: 0, busy: false, tabId: 1, startedAt: now, updatedAt: now, deadline: now + 1_200_000 };
+      const job = { origin, target: origin, kind: 'security', tool: 'audit_security', jobId: null, pollArguments: null, polls: 0, busy: false, tabId: 1, startedAt: now, updatedAt: now, deadline: now + 1_200_000 };
       await local.set({ jobs: { [origin]: job } });
-      setTimeout(() => local.set({ jobs: { [origin]: { ...job, jobId: 'mj_demo', phase: 'Queued for capacity; the audit starts when a worker is free.', polls: 1 } } }), 700);
+      setTimeout(() => local.set({ jobs: { [origin]: { ...job, jobId: 'mj_demo', polls: 1 } } }), 700);
       if (scenario !== 'running') {
         setTimeout(async () => {
           const model = await buildModel(origin);
