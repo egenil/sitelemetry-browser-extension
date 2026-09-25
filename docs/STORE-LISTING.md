@@ -20,6 +20,7 @@ What you get
 - A security score from 0 to 100 with a grade and severity counts.
 - The top findings with location, evidence, impact and a concrete fix.
 - "What was not measured": checks that were skipped, unavailable or require ownership verification. Unmeasured checks are not passes.
+- "Copy AI fix prompt": copies a plain-text prompt built from the result, listing the findings and asking for a root cause, a step-by-step fix and a verification step for each, to paste into an AI assistant of your choice. The prompt is built on your device and only copied to your clipboard.
 - A toolbar badge with the last score for the site in that tab.
 - The audit keeps running after you close the popup; the result is stored for the site.
 
@@ -35,7 +36,7 @@ Plans
 A Free Sitelemetry account includes the security audit with public security modules and a monthly allowance of security scans; each completed audit uses one scan. The popup shows the plan and usage facts of the connected account and links to the plan details when a plan or allowance limit stops an audit. Plan facts come from the public catalogue at sitelemetry.com/api/plans.
 
 Privacy
-The extension has no analytics, no content scripts and no access to page content or browsing history. It contacts only the Sitelemetry host configured in its settings (https://sitelemetry.com by default, and the only host the extension is granted access to): the site origin you audit, the audit kind and your API key (as the bearer token) are sent when you click "Audit this site". Your key, your acknowledgement and the last result per site are stored on your device only. Full policy: see the privacy policy link on this listing.
+The extension has no analytics, no content scripts and no access to page content or browsing history. It contacts only the Sitelemetry host configured in its settings (https://sitelemetry.com by default, and the only host the extension is granted access to): the site origin you audit, the audit kind and your API key (as the bearer token) are sent when you click "Audit this site". Your key, your acknowledgement and the last result per site are stored on your device only. The AI fix prompt is built on your device and only copied to your clipboard; nothing is sent. Full policy: see the privacy policy link on this listing.
 
 Open source under the MIT license.
 

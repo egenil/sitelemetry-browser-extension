@@ -23,6 +23,7 @@
   "runningTitle": { "message": "Audit in progress", "description": "Heading while a job runs." },
   "runningStarting": { "message": "Starting the audit…", "description": "Phase text before the server reports a job." },
   "runningBody": { "message": "You can close this popup. The audit keeps running and the result is stored for this site.", "description": "Note while a job runs." },
+  "runningOnService": { "message": "The audit is running on Sitelemetry. Results appear here automatically.", "description": "Phase text once the service has confirmed the job." },
   "busyPhase": { "message": "Another audit is already running for this account; retrying shortly.", "description": "Phase text when the account has a concurrent audit." },
   "jobLabel": { "message": "Job $ID$", "description": "Server job identifier.", "placeholders": { "id": { "content": "$1", "example": "mj_0123" } } },
 
@@ -65,7 +66,8 @@
   "nmModuleStatusReasons": { "message": "Module $MODULE$: $STATUS$ ($REASONS$)", "description": "Module with a non-measured status and reasons.", "placeholders": { "module": { "content": "$1", "example": "rdap" }, "status": { "content": "$2", "example": "unavailable" }, "reasons": { "content": "$3", "example": "registry_timeout" } } },
   "nmUnknown": { "message": "Some requested measurements were unavailable; the full result in the app lists them.", "description": "Partial result without details." },
 
-  "errorUnauthorized": { "message": "Sitelemetry rejected the API key (HTTP $STATUS$). Check the key in the extension settings.", "description": "401/403.", "placeholders": { "status": { "content": "$1", "example": "401" } } },
+  "errorUnauthorized": { "message": "Sitelemetry rejected the API key (HTTP $STATUS$). Check the key in the extension settings.", "description": "HTTP 401 from the service.", "placeholders": { "status": { "content": "$1", "example": "401" } } },
+  "errorForbidden": { "message": "Sitelemetry refused this request (HTTP $STATUS$).", "description": "HTTP 403 from the service. Not described as a rejected key; the service's own message, if any, is shown below it.", "placeholders": { "status": { "content": "$1", "example": "403" } } },
   "errorTimeout": { "message": "The audit did not finish within the time budget. Try again later.", "description": "Deadline passed without a job id." },
   "errorTimeoutJob": { "message": "The audit did not finish within the time budget of the extension. Sitelemetry keeps running job $ID$, so no allowance is used again: choose Check again to retrieve its result, or open the app.", "description": "Deadline passed while the service kept the job.", "placeholders": { "id": { "content": "$1", "example": "mj_0123" } } },
   "errorNoApiKey": { "message": "No Sitelemetry API key is stored on this device, so nothing was sent and the audit did not run. Add your key in the extension settings and start it again.", "description": "The stored key is gone when an audit is started or resumed; no request was made." },
@@ -75,6 +77,12 @@
   "errorTool": { "message": "The audit tool returned an error.", "description": "Tool error." },
   "errorIncomplete": { "message": "The audit is still running on the Sitelemetry side.", "description": "Unexpected running state." },
   "serverMessageLabel": { "message": "Message from Sitelemetry", "description": "Label above server-provided text." },
+  "fixPromptButton": { "message": "Copy AI fix prompt", "description": "Button on a completed result: copies a prompt for an AI assistant to the clipboard." },
+  "fixPromptHint": { "message": "The prompt is built on this device from this result and only copied to your clipboard. Nothing is sent.", "description": "Note under the copy button." },
+  "fixPromptCopied": { "message": "Prompt copied. Paste it into ChatGPT, Claude or your coding assistant.", "description": "Confirmation after copying." },
+  "fixPromptCopyFailed": { "message": "The prompt could not be copied automatically. Select the text below and copy it.", "description": "Shown when the clipboard is unavailable; the prompt field opens below." },
+  "fixPromptShow": { "message": "Show the prompt", "description": "Expander that reveals the prompt text." },
+  "fixPromptTextLabel": { "message": "AI fix prompt", "description": "Accessible name of the read-only prompt field." },
   "openReport": { "message": "Open the full report", "description": "Link." },
   "stepVerifyOwnership": { "message": "Verify ownership of this site in the app (DNS or HTTP challenge) to include the protected checks.", "description": "Next step." },
   "stepAcceptTerms": { "message": "Review and accept the current audit authorization terms for the connected account in the app, then run the audit again.", "description": "Next step." },
@@ -127,7 +135,9 @@
   "keyRemoved": { "message": "The API key was removed from this device.", "description": "Status." },
   "testing": { "message": "Connecting…", "description": "Status." },
   "testOk": { "message": "Connected to $SERVER$ (protocol $PROTOCOL$).", "description": "Status.", "placeholders": { "server": { "content": "$1", "example": "sitelemetry 1.0.0" }, "protocol": { "content": "$2", "example": "2025-06-18" } } },
-  "testUnauthorized": { "message": "The API key was rejected (HTTP $STATUS$).", "description": "Status.", "placeholders": { "status": { "content": "$1", "example": "401" } } },
+  "testUnauthorized": { "message": "The API key was rejected (HTTP $STATUS$).", "description": "Status for HTTP 401.", "placeholders": { "status": { "content": "$1", "example": "401" } } },
+  "testForbidden": { "message": "Sitelemetry refused this request (HTTP $STATUS$).", "description": "Status for HTTP 403 without a message from the service.", "placeholders": { "status": { "content": "$1", "example": "403" } } },
+  "testForbiddenMessage": { "message": "Sitelemetry refused this request (HTTP $STATUS$). Message from Sitelemetry: $MESSAGE$", "description": "Status for HTTP 403 with the message of the service.", "placeholders": { "status": { "content": "$1", "example": "403" }, "message": { "content": "$2", "example": "Forbidden." } } },
   "testFailed": { "message": "Connection failed: $MESSAGE$", "description": "Status.", "placeholders": { "message": { "content": "$1", "example": "Failed to fetch" } } },
   "ackStatus": { "message": "Ownership notice acknowledged on $DATE$.", "description": "Status.", "placeholders": { "date": { "content": "$1", "example": "Sep 21, 2026, 10:00" } } },
   "ackStatusNone": { "message": "The ownership notice will be shown before the first audit.", "description": "Status." },
@@ -136,6 +146,7 @@
   "privacyItemSent": { "message": "Sent to Sitelemetry only when you click Audit this site: the site origin (for example https://example.com), the audit kind and your API key as the bearer token.", "description": "Privacy bullet." },
   "privacyItemStored": { "message": "Stored on this device only: the API key, the base URL, the acknowledgement, the last result per site and a cached copy of the public plan catalogue.", "description": "Privacy bullet." },
   "privacyItemNoTracking": { "message": "No analytics, no content scripts and no reading of pages or browsing history. The extension never contacts any host other than the configured Sitelemetry base URL.", "description": "Privacy bullet." },
+  "privacyItemPrompt": { "message": "Copy AI fix prompt builds the prompt on this device from a stored result and only copies it to your clipboard. Nothing is sent.", "description": "Privacy bullet." },
   "privacyItemRemove": { "message": "Remove the key here or uninstall the extension to delete everything it stored.", "description": "Privacy bullet." },
-  "versionLabel": { "message": "Version $VERSION$", "description": "Footer.", "placeholders": { "version": { "content": "$1", "example": "0.1.0" } } }
+  "versionLabel": { "message": "Version $VERSION$", "description": "Footer.", "placeholders": { "version": { "content": "$1", "example": "0.1.1" } } }
 }

@@ -22,7 +22,8 @@ export function isTransientError(error) {
   return true; // DNS/network failures and request timeouts
 }
 
-// First text line of a tool result: the server says whether a job is queued or executing.
+// First text line of a tool result, for the log only. The text is written for MCP
+// clients (it tells them how to poll), so it is never passed to a caller or stored.
 export function phaseLine(result) {
   const content = Array.isArray(result?.content) ? result.content : [];
   return content.find((c) => c?.type === 'text')?.text?.split('\n')[0]?.trim() || '';
@@ -31,7 +32,8 @@ export function phaseLine(result) {
 // The server answers long audits with status "running", a jobId and pollArguments.
 // Those arguments are re-sent unchanged to the same tool until the final result.
 // onRunning(state) is awaited after every "running" answer, before the wait, so a
-// caller can persist the state and schedule a wake-up (chrome.alarms).
+// caller can persist the state and schedule a wake-up (chrome.alarms). The states
+// passed to onRunning and onBusy carry no server text.
 export async function runAudit({
   client, tool, args, jobId = null, deadline, sleep = sleepFor,
   minWaitMs = 1000, maxWaitMs = 25_000, onRunning = async () => {}, onBusy = async () => {}, log = () => {}
@@ -56,7 +58,7 @@ export async function runAudit({
       if (rateLimited && busy++ < 40) {
         const delay = error.retryAfterMs ?? 5000;
         log(`Sitelemetry asked to retry later (${error.message}); waiting ${Math.ceil(delay / 1000)}s.`);
-        await onBusy({ jobId, retryAfterMs: delay, message: error.message });
+        await onBusy({ jobId, retryAfterMs: delay });
         await wait(delay);
         continue;
       }
@@ -76,13 +78,13 @@ export async function runAudit({
       polls += 1;
       current = structured.pollArguments && typeof structured.pollArguments === 'object' ? structured.pollArguments : { ...current, jobId };
       const retryAfterMs = Number.isFinite(structured.retryAfterMs) ? structured.retryAfterMs : 2000;
-      await onRunning({ jobId, pollArguments: current, retryAfterMs, phase: line, polls });
+      await onRunning({ jobId, pollArguments: current, retryAfterMs, polls });
       await wait(retryAfterMs);
       continue;
     }
     if (structured?.status === 'action_required' && structured.reason === 'audit_job_busy' && busy++ < 10) {
       log('Another audit is already running for this account; retrying shortly.');
-      await onBusy({ jobId, retryAfterMs: 15_000, message: phaseLine(result) });
+      await onBusy({ jobId, retryAfterMs: 15_000 });
       await wait(15_000);
       continue;
     }

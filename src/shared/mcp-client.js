@@ -6,15 +6,18 @@ import { EXTENSION_VERSION } from './version.js';
 export const CLIENT_INFO = Object.freeze({ name: 'sitelemetry-browser-extension', version: EXTENSION_VERSION });
 const PROTOCOL_VERSION = '2025-06-18';
 
+// serviceMessage is the text of a JSON error body only: empty when the body was
+// not JSON (a proxy or firewall page) or carried no message.
 export class McpHttpError extends Error {
-  constructor(status, body, headers) {
+  constructor(status, body, headers, { json = true } = {}) {
     const payload = body && typeof body === 'object' ? body : {};
-    const text = typeof payload.error === 'string' ? payload.error
+    const sent = typeof payload.error === 'string' ? payload.error
       : typeof payload.error?.message === 'string' ? payload.error.message
-        : typeof payload.message === 'string' ? payload.message : `HTTP ${status}`;
-    super(text);
+        : typeof payload.message === 'string' ? payload.message : '';
+    super(sent || `HTTP ${status}`);
     this.name = 'McpHttpError';
     this.status = status;
+    this.serviceMessage = json ? sent.trim() : '';
     this.code = typeof payload.code === 'string' ? payload.code
       : typeof payload.error?.code === 'string' ? payload.error.code : null;
     this.retryAfterMs = parseRetryAfter(headers?.get?.('retry-after'));
@@ -84,8 +87,9 @@ export function createMcpClient({ baseUrl, apiKey, fetchImpl = globalThis.fetch,
     const text = await response.text();
     if (!response.ok) {
       let body;
-      try { body = JSON.parse(text); } catch { body = { error: text.slice(0, 300) || `HTTP ${response.status}` }; }
-      throw new McpHttpError(response.status, body, response.headers);
+      let json = true;
+      try { body = JSON.parse(text); } catch { json = false; body = { error: text.slice(0, 300) || `HTTP ${response.status}` }; }
+      throw new McpHttpError(response.status, body, response.headers, { json });
     }
     if (response.status === 202 || !text.trim()) return null;
     const type = response.headers.get('content-type') || '';

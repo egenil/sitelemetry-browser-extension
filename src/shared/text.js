@@ -2,6 +2,8 @@
 // from _locales. Pure functions: the popup turns the returned pieces into DOM.
 import { freePlan, paidPlans } from './plans.js';
 import { APP_URL, PRICING_URL } from './links.js';
+import { McpHttpError } from './mcp-client.js';
+import { clip } from './outcome.js';
 
 const STATUS_KEYS = Object.freeze({
   completed: 'statusCompleted',
@@ -33,7 +35,9 @@ export function statusHeading(model, t) {
 export function problemText(model, t) {
   if (model.status !== 'blocked') return null;
   switch (model.reason) {
-    case 'unauthorized': return t('errorUnauthorized', [model.httpStatus ?? 401]);
+    // 0.1.0 stored a 403 as 'unauthorized'; it is not a rejected key either.
+    case 'unauthorized': return model.httpStatus === 403 ? t('errorForbidden', [403]) : t('errorUnauthorized', [model.httpStatus ?? 401]);
+    case 'forbidden': return t('errorForbidden', [model.httpStatus ?? 403]);
     case 'no_api_key': return t('errorNoApiKey');
     case 'interrupted': return t('errorInterrupted');
     case 'timeout': return model.jobId ? t('errorTimeoutJob', [model.jobId]) : t('errorTimeout');
@@ -46,6 +50,22 @@ export function problemText(model, t) {
     case 'incomplete': return t('errorIncomplete');
     default: return null;
   }
+}
+
+// Status line of the options page "Test connection" for a failed initialize call.
+export function connectionErrorText(error, t) {
+  if (error instanceof McpHttpError && error.status === 401) return t('testUnauthorized', [401]);
+  if (error instanceof McpHttpError && error.status === 403) {
+    return error.serviceMessage ? t('testForbiddenMessage', [403, clip(error.serviceMessage, 300)]) : t('testForbidden', [403]);
+  }
+  return t('testFailed', [error?.message || String(error)]);
+}
+
+// Phase line of the running view. Always the extension's own text: the service's
+// running answer is written for MCP clients (it explains how to poll) and never shown.
+export function runningPhaseKey(job) {
+  if (job?.busy) return 'busyPhase';
+  return job?.jobId || job?.polls > 0 ? 'runningOnService' : 'runningStarting';
 }
 
 export const notMeasuredText = (entry, t) => t(entry.key, entry.subs);

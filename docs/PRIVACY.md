@@ -1,6 +1,6 @@
 # Privacy policy: Sitelemetry Audit browser extension
 
-Last updated: 2026-09-21
+Last updated: 2026-09-25
 
 Sitelemetry Audit is a browser extension for Chrome and Microsoft Edge that runs a security audit of a website you own through your Sitelemetry account. This policy describes what the extension itself sends, stores and never does. The Sitelemetry service (sitelemetry.com) has its own terms and privacy policy, which apply to your account and to the audits recorded on it.
 
@@ -16,6 +16,10 @@ The extension contacts only the Sitelemetry host configured in its settings. Tha
 | The popup opens | A request to the public plan catalogue `/api/plans` (no user data, at most once a day) | To show factual plan and usage information |
 
 The extension does not send page content, page titles, cookies, form data, browsing history, other tabs, or any identifier of your browser or device. It contains no analytics, telemetry or crash reporting.
+
+## Copy AI fix prompt
+
+The **Copy AI fix prompt** button in the popup builds a text prompt from the audit result already stored on your device and writes it to your clipboard; the same text can also be shown in a read-only field. The prompt is built locally and nothing is sent anywhere: no request is made to Sitelemetry or to any other service, and the extension does not open or contact an AI service. It contains the audited site origin and the stored result (score, findings, what was not measured), never your API key or job identifiers. What happens to the text after you paste it into another application is governed by that application. Copying uses the standard clipboard API during your click and needs no additional permission.
 
 ## What the extension stores
 

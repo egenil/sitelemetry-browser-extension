@@ -119,3 +119,24 @@ body { width: 380px; min-height: 200px; }
 .pillars { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
 .pillars td { padding: 2px 4px; border-top: 1px solid var(--border); }
 .pillars td:not(:first-child) { text-align: right; }
+
+.prompt-box { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; }
+.prompt-status:empty { display: none; }
+.prompt-status { margin-top: 6px; }
+.prompt-details summary { cursor: pointer; color: var(--accent); }
+.prompt-text {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  resize: vertical;
+}
+.prompt-text:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.offscreen { position: fixed; top: 0; left: -10000px; width: 1px; height: 1px; opacity: 0; }

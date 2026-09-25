@@ -5,7 +5,7 @@
   without loading the extension. Not part of the package.
 
   Serve the repository root (node dev/serve.mjs) and open /dev/harness.html with:
-    ?scenario=completed|free|full|quota|plan|verify|consent|unauthorized|transport|running|stalled
+    ?scenario=completed|free|full|quota|plan|verify|consent|unauthorized|forbidden|transport|running|stalled
     ?scenario=nokey        no API key stored (setup view)
     ?scenario=notacked     key stored, ownership notice not yet acknowledged
     ?scenario=unsupported  active tab is a browser page
@@ -29,6 +29,7 @@
     <a href="?scenario=verify">verify</a>
     <a href="?scenario=consent">consent</a>
     <a href="?scenario=unauthorized">unauthorized</a>
+    <a href="?scenario=forbidden">forbidden</a>
     <a href="?scenario=transport">transport</a>
     <a href="?scenario=running">running</a>
     <a href="?scenario=stalled">stalled (check again)</a>

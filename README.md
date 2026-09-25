@@ -35,7 +35,8 @@ The key is stored with `chrome.storage.local` only (never the synced storage are
 3. The audit runs on the Sitelemetry side. You can close the popup: the service worker keeps polling with the server's `pollArguments` and, if the browser suspends the worker, a `chrome.alarms` wake-up resumes the job from its stored state. The result is stored per site origin.
 4. If the audit is still running when the extension's time budget (20 minutes) is over, the job is kept with its `jobId` and `pollArguments` and the button becomes **Check again**: it retrieves that same audit, so no second scan of the allowance is used. The job is only discarded once Sitelemetry answers with a final result.
 5. Reopen the popup to see the score, the grade, severity counts, the top findings (each with location, evidence, impact and fix), **What was not measured** (unmeasured checks are not passes), a link to the full report when the server provides one, and the next step when ownership verification or the authorization terms are required.
-6. The toolbar badge shows the last score for the site in that tab.
+6. **Copy AI fix prompt** copies a plain-text prompt built from the stored result to the clipboard, to paste into an AI assistant of your choice. It lists the stored findings (most severe first) with their evidence and suggested fix, what was not measured, and asks for the root cause, an exact fix and a way to verify each one. The prompt is built on the device and only copied to the clipboard; nothing is sent. Finding text is marked as data and neutralized so it cannot pose as instructions, and the prompt never contains the API key or job details. It stays within 30,000 characters; for a very large result the least severe findings are left out and the prompt says how many. **Show the prompt** opens the same text in a read-only field if copying is not possible.
+7. The toolbar badge shows the last score for the site in that tab.
 
 Results, gates and errors are reported as statuses, as in the Sitelemetry CI clients: `completed`, `partial`, `blocked`, `quota_exhausted`, `plan_required` and `verification_required`. A gate never starts an audit and never uses allowance.
 
@@ -64,6 +65,7 @@ The settings page accepts an `https://` base URL for a staging deployment. The m
 
 - Sent to the configured Sitelemetry base URL, only when you click **Audit this site**: the site origin (for example `https://example.com`), the audit kind (`security`) and your API key as the bearer token; then the server's `pollArguments` unchanged while the job runs. **Test connection** sends the MCP `initialize` request. The plan catalogue request carries no user data.
 - Stored on this device: see the permissions table. Results can contain URLs and response details of the audited site. Remove the key in the settings or uninstall the extension to delete everything.
+- Copy AI fix prompt: built on this device from the stored result and written only to the clipboard. Nothing is sent to Sitelemetry or anywhere else.
 - Never: page content, browsing history, cookies, analytics or crash reports. See [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Development
@@ -89,6 +91,7 @@ src/shared/mcp-client.js    JSON-RPC over HTTP client for {base}/mcp (initialize
 src/shared/audit.js         start/poll loop: re-sends pollArguments, honours retryAfterMs, resumable
 src/shared/outcome.js       status classification and findings normalization
 src/shared/text.js          headings, next steps and the plan box through the translator
+src/shared/fix-prompt.js    the "Copy AI fix prompt" text, built from a stored result (no DOM)
 src/shared/plans.js         GET /api/plans with a one-day cache
 src/shared/storage.js       chrome.storage.local access, origin and base URL helpers
 src/shared/badge.js         toolbar badge text and colour

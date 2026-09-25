@@ -6,7 +6,7 @@ import { McpHttpError, McpRpcError } from '../src/shared/mcp-client.js';
 import { SEVERITIES, blockedOutcome, countBySeverity, interpretOutcome, isMeasured, normalizeFinding, notMeasuredEntries, shortHash, sortBySeverity } from '../src/shared/outcome.js';
 import { normalizePlans } from '../src/shared/plans.js';
 import { APP_URL, PRICING_URL } from '../src/shared/links.js';
-import { formatPrice, kindLabel, notMeasuredText, planSection, problemText, statusHeading, verificationStep } from '../src/shared/text.js';
+import { connectionErrorText, formatPrice, kindLabel, notMeasuredText, planSection, problemText, runningPhaseKey, statusHeading, verificationStep } from '../src/shared/text.js';
 import { fixture } from './mock-server.mjs';
 
 const messages = JSON.parse(readFileSync(new URL('../_locales/en/messages.json', import.meta.url), 'utf8'));
@@ -20,8 +20,16 @@ const headers = (map) => ({ get: (name) => map[name.toLowerCase()] ?? null });
 test('interpretOutcome maps transport, plan, quota and verification outcomes to statuses', () => {
   const timeout = interpretOutcome({ outcome: 'timeout', tool: 'audit_security', jobId: 'mj_x' }, context);
   assert.deepEqual([timeout.status, timeout.reason, timeout.jobId], ['blocked', 'timeout', 'mj_x']);
-  const unauthorized = interpretOutcome({ outcome: 'error', error: new McpHttpError(403, { error: 'Forbidden.' }, headers({})) }, context);
-  assert.deepEqual([unauthorized.status, unauthorized.reason, unauthorized.httpStatus], ['blocked', 'unauthorized', 403]);
+  const unauthorized = interpretOutcome({ outcome: 'error', error: new McpHttpError(401, { error: 'Unauthorized.' }, headers({})) }, context);
+  assert.deepEqual([unauthorized.status, unauthorized.reason, unauthorized.httpStatus, unauthorized.message], ['blocked', 'unauthorized', 401, 'Unauthorized.']);
+  const unauthorizedPage = interpretOutcome({ outcome: 'error', error: new McpHttpError(401, { error: '<html>Sign in</html>' }, headers({}), { json: false }) }, context);
+  assert.deepEqual([unauthorizedPage.reason, unauthorizedPage.message], ['unauthorized', ''], 'a proxy page answering 401 is not shown as a message from Sitelemetry');
+  const forbidden = interpretOutcome({ outcome: 'error', error: new McpHttpError(403, { error: 'Forbidden.' }, headers({})) }, context);
+  assert.deepEqual([forbidden.status, forbidden.reason, forbidden.httpStatus, forbidden.message], ['blocked', 'forbidden', 403, 'Forbidden.']);
+  const forbiddenPage = interpretOutcome({ outcome: 'error', error: new McpHttpError(403, { error: '<html>Access denied</html>' }, headers({}), { json: false }) }, context);
+  assert.deepEqual([forbiddenPage.reason, forbiddenPage.message], ['forbidden', ''], 'a non-JSON body is not attributed to the service');
+  const forbiddenEmpty = interpretOutcome({ outcome: 'error', error: new McpHttpError(403, {}, headers({})) }, context);
+  assert.equal(forbiddenEmpty.message, '', 'no invented message for an empty body');
   const paymentRequired = interpretOutcome({ outcome: 'error', error: new McpHttpError(402, { error: 'This feature is not included in Free.', code: 'PLAN_UPGRADE_REQUIRED' }, headers({})) }, context);
   assert.deepEqual([paymentRequired.status, paymentRequired.reason], ['plan_required', 'PLAN_UPGRADE_REQUIRED']);
   const quotaHttp = interpretOutcome({ outcome: 'error', error: new McpHttpError(429, { error: 'Monthly security scan limit reached for this account (monthly allowance: 10).', code: 'COMMERCIAL_USAGE_LIMIT_REACHED' }, headers({ 'retry-after': '60' })) }, context);
@@ -128,6 +136,11 @@ test('headings, next steps and problem text come from the message table', () => 
 
   assert.equal(problemText(model, t), null);
   assert.equal(problemText({ ...model, status: 'blocked', reason: 'unauthorized', httpStatus: 401 }, t), 'Sitelemetry rejected the API key (HTTP 401). Check the key in the extension settings.');
+  const refused = problemText({ ...model, status: 'blocked', reason: 'forbidden', httpStatus: 403 }, t);
+  assert.equal(refused, 'Sitelemetry refused this request (HTTP 403).');
+  assert.doesNotMatch(refused, /API key|rejected/, 'a 403 is not described as a rejected key');
+  // 0.1.0 stored a 403 as reason 'unauthorized'; results kept from that version read the same way.
+  assert.equal(problemText({ ...model, status: 'blocked', reason: 'unauthorized', httpStatus: 403 }, t), 'Sitelemetry refused this request (HTTP 403).');
   assert.match(problemText({ ...model, status: 'blocked', reason: 'timeout', jobId: 'mj_9' }, t), /job mj_9/);
   assert.match(problemText({ ...model, status: 'blocked', reason: 'timeout', jobId: 'mj_9' }, t), /Check again/, 'the deadline text offers to retrieve the job');
   assert.match(problemText({ ...model, status: 'blocked', reason: 'timeout', jobId: null }, t), /did not finish/);
@@ -178,4 +191,26 @@ test('the plan box is neutral, factual and only shown for Free accounts or gates
 
   const allText = Object.values(messages).map((entry) => entry.message).join('\n');
   assert.doesNotMatch(allText, /upgrade now|limited time|don't miss|hurry|act now|only today/i, 'no pressure language');
+});
+
+test('the options connection test tells a rejected key from a refused request', () => {
+  assert.equal(connectionErrorText(new McpHttpError(401, { error: 'Unauthorized.' }, headers({})), t), 'The API key was rejected (HTTP 401).');
+  const refused = connectionErrorText(new McpHttpError(403, { error: 'Not allowed for this account.' }, headers({})), t);
+  assert.equal(refused, 'Sitelemetry refused this request (HTTP 403). Message from Sitelemetry: Not allowed for this account.');
+  assert.doesNotMatch(refused, /API key was rejected/);
+  assert.equal(connectionErrorText(new McpHttpError(403, { error: '<html>blocked</html>' }, headers({}), { json: false }), t), 'Sitelemetry refused this request (HTTP 403).');
+  assert.equal(connectionErrorText(new McpHttpError(403, {}, headers({})), t), 'Sitelemetry refused this request (HTTP 403).');
+  assert.equal(connectionErrorText(new McpHttpError(500, { error: 'Server error' }, headers({})), t), 'Connection failed: Server error');
+  assert.equal(connectionErrorText(new TypeError('Failed to fetch'), t), 'Connection failed: Failed to fetch');
+});
+
+test('the running view only shows the extension phase text, never the service text', () => {
+  assert.equal(runningPhaseKey({ jobId: null, polls: 0, busy: false }), 'runningStarting');
+  assert.equal(runningPhaseKey({ jobId: 'mj_1', polls: 1, busy: false }), 'runningOnService');
+  assert.equal(runningPhaseKey({ jobId: 'mj_1', polls: 3, busy: true }), 'busyPhase');
+  // A job stored by 0.1.0 may still carry the service's model-facing text; it is ignored.
+  const legacy = { jobId: 'mj_1', polls: 2, phase: 'The audit is still running. Call the same tool with the returned pollArguments unchanged.' };
+  assert.equal(t(runningPhaseKey(legacy)), 'The audit is running on Sitelemetry. Results appear here automatically.');
+  const phases = ['runningStarting', 'runningOnService', 'busyPhase'].map((key) => t(key)).join('\n');
+  assert.doesNotMatch(phases, /pollArguments|same tool|jobId/);
 });

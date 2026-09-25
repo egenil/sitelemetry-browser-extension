@@ -44,4 +44,6 @@ Not targeted by this package. Firefox needs `browser_specific_settings.gecko.id`
 
 ## Versioning and updates
 
-Version numbers must increase with every store upload (`0.1.0` -> `0.1.1`). Keep `manifest.json`, `src/shared/version.js` and `package.json` in sync (the tests fail otherwise), describe the change in CHANGELOG.md, run `npm run pack`, upload to both stores.
+Version numbers must increase with every store upload (`0.1.0` -> `0.1.1`).
+
+For 0.1.1 no permission, host permission or data use changes: the new **Copy AI fix prompt** button writes to the clipboard from the popup's click handler (no `clipboardWrite` permission) and makes no request, so the privacy practices answers stay as they are. Mention the button in the "what changed" notes of the update and upload the refreshed PRIVACY.md text to the hosted policy URL. Keep `manifest.json`, `src/shared/version.js` and `package.json` in sync (the tests fail otherwise), describe the change in CHANGELOG.md, run `npm run pack`, upload to both stores.

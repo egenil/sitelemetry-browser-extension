@@ -1,6 +1,6 @@
 {
   "name": "sitelemetry-browser-extension",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Sitelemetry Audit: Manifest V3 extension for Chrome and Edge that runs a Sitelemetry security audit of the site in the current tab.",
   "license": "MIT",
