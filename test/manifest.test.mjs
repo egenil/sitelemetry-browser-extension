@@ -39,7 +39,14 @@ test('the validator rejects a manifest that drifts from the rules', () => {
       content_security_policy: { extension_pages: "script-src 'self' https://cdn.example; object-src 'self'" }
     };
     writeFileSync(join(dir, 'manifest.json'), JSON.stringify(drifted));
+    // Folder names Chrome does not support, and a translated description over the store limit.
+    cpSync(join(root, '_locales', 'pt_BR'), join(dir, '_locales', 'pt'), { recursive: true });
+    const german = JSON.parse(readFileSync(join(dir, '_locales', 'de', 'messages.json'), 'utf8'));
+    german.extensionDescription.message = 'x'.repeat(133);
+    writeFileSync(join(dir, '_locales', 'de', 'messages.json'), JSON.stringify(german));
     const { errors } = validateManifest(dir);
+    assert.ok(errors.some((e) => /_locales\/pt is not a locale Chrome supports/.test(e)), errors.join('\n'));
+    assert.ok(errors.some((e) => /_locales\/de: description is 133 characters/.test(e)), errors.join('\n'));
     assert.ok(errors.some((e) => /permissions not allowed: tabs/.test(e)), errors.join('\n'));
     assert.ok(errors.some((e) => /host_permissions must be exactly/.test(e)));
     assert.ok(errors.some((e) => /content_scripts must not be declared/.test(e)));

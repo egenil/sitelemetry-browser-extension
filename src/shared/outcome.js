@@ -78,11 +78,16 @@ export function sortBySeverity(findings) {
   return [...findings].sort((a, b) => SEVERITIES.indexOf(a.severity) - SEVERITIES.indexOf(b.severity));
 }
 
+// A module's reasons are kept longer than they are shown (not-measured.js shortens
+// them for display): an explanation can depend on the end of a long reason, such as
+// the scripts left outside the scan after a list of scripts that failed.
+export const MAX_REASONS_CHARS = 2000;
+
 // Everything the result says was skipped, unavailable or gated, as message keys
 // with substitutions (see _locales). Unmeasured is not a pass.
 export function notMeasuredEntries(structured) {
   const entries = [];
-  const push = (key, subs = []) => entries.push({ key, subs: subs.map((s) => clip(s, 300)) });
+  const push = (key, subs = [], limits = []) => entries.push({ key, subs: subs.map((s, index) => clip(s, limits[index] ?? 300)) });
   for (const row of structured.failedPillars || []) push('nmPillarFailed', [row.pillar, row.error || 'failed']);
   const coverage = structured.auditDetails?.planCoverage;
   for (const row of coverage?.skippedPillars || []) push(row.reason === 'not_in_plan' ? 'nmPillarNotInPlan' : 'nmPillarOutOfScope', [row.pillar]);
@@ -97,7 +102,7 @@ export function notMeasuredEntries(structured) {
     for (const row of scope.moduleResults || []) {
       if (!['unavailable', 'partial'].includes(row?.status)) continue;
       const reasons = (Array.isArray(row.reasons) ? row.reasons : [row.reason]).filter((reason) => typeof reason === 'string' && reason.trim());
-      if (reasons.length) push('nmModuleStatusReasons', [row.module, row.status, reasons.join('; ')]);
+      if (reasons.length) push('nmModuleStatusReasons', [row.module, row.status, reasons.join('; ')], [300, 300, MAX_REASONS_CHARS]);
       else push('nmModuleStatus', [row.module, row.status]);
     }
   }

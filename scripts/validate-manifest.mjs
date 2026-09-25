@@ -2,13 +2,16 @@
 // Validates manifest.json against the rules this extension commits to: Manifest V3,
 // the exact permission set, the single host permission, a strict CSP, no content
 // scripts, existing files and valid PNG icons of the declared sizes.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
 
 export const EXPECTED_PERMISSIONS = ['activeTab', 'storage', 'alarms'];
 export const EXPECTED_HOSTS = ['https://sitelemetry.com/*'];
+// Locales Chrome accepts as _locales folder names (developer.chrome.com, "Locales
+// supported"); the stores refuse a package with any other folder name.
+export const CHROME_LOCALES = Object.freeze(['ar', 'am', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'en_AU', 'en_GB', 'en_US', 'es', 'es_419', 'et', 'fa', 'fi', 'fil', 'fr', 'gu', 'he', 'hi', 'hr', 'hu', 'id', 'it', 'ja', 'kn', 'ko', 'lt', 'lv', 'ml', 'mr', 'ms', 'nl', 'no', 'pl', 'pt_BR', 'pt_PT', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tr', 'uk', 'vi', 'zh_CN', 'zh_TW']);
 const FORBIDDEN_KEYS = ['content_scripts', 'web_accessible_resources', 'optional_permissions', 'optional_host_permissions', 'externally_connectable', 'sandbox', 'declarative_net_request', 'oauth2'];
 
 export function readPng(buffer) {
@@ -70,6 +73,27 @@ export function validateManifest(root) {
   if (!description) errors.push('description is required');
   else if (description.length > 132) errors.push(`description is ${description.length} characters; the limit is 132`);
   if (manifest.action?.default_title) resolve(manifest.action.default_title, 'action.default_title');
+
+  // Every translation: a folder name Chrome accepts, and a store name and description
+  // within the limits (a key a locale lacks falls back to the default locale).
+  const localesDir = join(root, '_locales');
+  for (const folder of existsSync(localesDir) ? readdirSync(localesDir) : []) {
+    if (!CHROME_LOCALES.includes(folder)) { errors.push(`_locales/${folder} is not a locale Chrome supports`); continue; }
+    let locale;
+    try {
+      locale = JSON.parse(readFileSync(join(localesDir, folder, 'messages.json'), 'utf8'));
+    } catch (error) {
+      errors.push(`_locales/${folder}/messages.json cannot be parsed: ${error.message}`);
+      continue;
+    }
+    const text = (value) => {
+      const key = /^__MSG_(\w+)__$/.exec(String(value))?.[1];
+      return key ? (locale[key]?.message ?? messages[key]?.message ?? '') : String(value);
+    };
+    if (text(manifest.name).length > 75) errors.push(`_locales/${folder}: name is longer than 75 characters`);
+    const localized = text(manifest.description);
+    if (localized.length > 132) errors.push(`_locales/${folder}: description is ${localized.length} characters; the limit is 132`);
+  }
 
   // Permissions: exactly the expected set, no more.
   const permissions = Array.isArray(manifest.permissions) ? manifest.permissions : [];

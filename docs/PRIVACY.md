@@ -10,7 +10,7 @@ The extension contacts only the Sitelemetry host configured in its settings. Tha
 
 | When | What is sent | Why |
 | --- | --- | --- |
-| You click **Audit this site** | The origin of the site in the current tab (scheme, host and port, for example `https://example.com`), the audit kind (`security`) and your Sitelemetry MCP API key as the HTTP bearer token | To start the audit on your account |
+| You click **Audit this site** | The origin of the site in the current tab (scheme, host and port, for example `https://example.com`), the audit kind (`security`), the report language (a language code such as `tr`, taken from your browser's UI language) and your Sitelemetry MCP API key as the HTTP bearer token | To start the audit on your account, with the results in your language |
 | While the audit runs | The server's `pollArguments` (the same origin and the job id), with the API key | To retrieve the result of the same audit without starting another one |
 | You click **Test connection** in the settings | An MCP `initialize` request with the API key | To confirm the key and the host |
 | The popup opens | A request to the public plan catalogue `/api/plans` (no user data, at most once a day) | To show factual plan and usage information |
@@ -28,7 +28,7 @@ Everything is stored on your device with the browser's local extension storage (
 - Your Sitelemetry MCP API key (shown masked in the settings).
 - The base URL (only if you changed it).
 - The date of your ownership acknowledgement.
-- The last audit result for each site you audited (at most 50 sites). A result contains the score, the findings and the server's text for that site; findings can include URLs and response details of the audited site.
+- The last audit result for each site you audited (at most 50 sites). A result contains the score, the findings, the server's text for that site and the report language it was requested in; findings can include URLs and response details of the audited site.
 - A cached copy of the public plan catalogue.
 
 ## Permissions

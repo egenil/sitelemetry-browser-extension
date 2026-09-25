@@ -72,8 +72,10 @@ test('interpretOutcome normalizes completed, partial and full results', () => {
     { key: 'nmVerificationModules', subs: ['http-methods, exposure, api-exposure'] },
     { key: 'nmModuleStatusReasons', subs: ['rdap', 'unavailable', 'registry_timeout'] }
   ]);
-  assert.equal(notMeasuredText(partial.notMeasured[0], t), 'Security modules that require ownership verification of the site: http-methods, exposure, api-exposure');
-  assert.equal(notMeasuredText(partial.notMeasured[1], t), 'Module rdap: unavailable (registry_timeout)');
+  // Module ids read as the module names of sitelemetry.com; a reason the extension has
+  // no explanation for is shown as the service sent it.
+  assert.equal(notMeasuredText(partial.notMeasured[0], t), 'Security modules that require ownership verification of the site: HTTP methods / CORS, Sensitive file exposure, API / GraphQL exposure');
+  assert.equal(notMeasuredText(partial.notMeasured[1], t), 'WHOIS / RDAP: not measured (registry_timeout)');
 
   const full = interpretOutcome({ outcome: 'result', tool: 'audit_full', result: fixture('full-partial.json') }, { kind: 'full', target: 'https://full.example' });
   assert.equal(full.status, 'partial');
@@ -96,10 +98,10 @@ test('interpretOutcome normalizes completed, partial and full results', () => {
   assert.deepEqual(unmeasured.map((entry) => notMeasuredText(entry, t)), [
     'SEO: not included in the connected plan',
     'AI: outside the connected account scope',
-    'Security modules outside the connected plan: wordpress',
+    'Security modules outside the connected plan: WordPress posture',
     'Performance: unavailable (no measurement for this site)',
-    'Module tls: unavailable (The TLS certificate check requires an https:// target.)',
-    'Module ports: partial'
+    'TLS / certificate: not measured (The TLS certificate check requires an https:// target.)',
+    'Port scan: partly measured'
   ]);
 });
 

@@ -4,6 +4,7 @@
 // resumes it from the stored pollArguments.
 import { AUDIT_TOOLS, DEFAULT_DEADLINE_MS, DEFAULT_KIND, isTransientError, runAudit } from '../shared/audit.js';
 import { applyBadge } from '../shared/badge.js';
+import { REPORT_LANGUAGES, reportLanguage, uiLanguage } from '../shared/i18n.js';
 import { createMcpClient } from '../shared/mcp-client.js';
 import { blockedOutcome, interpretOutcome } from '../shared/outcome.js';
 import { getJob, getJobs, getResult, getSettings, originOf, setJob, setResult } from '../shared/storage.js';
@@ -14,6 +15,11 @@ const ALARM_DELAY_MINUTES = 0.5;
 const driving = new Set();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const alarmName = (origin) => `${ALARM_PREFIX}${origin}`;
+// The arguments of the call that starts an audit: the target and the report
+// language. Polls re-send the service's pollArguments unchanged instead; the
+// service keeps the language of the job for its result.
+const startArguments = (job) => ({ target: job.target, ...(REPORT_LANGUAGES.includes(job.lang) ? { lang: job.lang } : {}) });
+const storedLanguage = (job) => (REPORT_LANGUAGES.includes(job?.lang) ? job.lang : null);
 
 async function wakeLater(origin) {
   await chrome.alarms.create(alarmName(origin), { delayInMinutes: ALARM_DELAY_MINUTES });
@@ -34,7 +40,7 @@ async function badgeForJob(job, entry, running = false) {
 
 // A terminal outcome: the result is kept for the site and the job is done.
 async function finish(origin, job, model) {
-  await setResult(origin, { model, finishedAt: Date.now(), kind: job.kind });
+  await setResult(origin, { model, finishedAt: Date.now(), kind: job.kind, lang: storedLanguage(job) });
   await setJob(origin, null);
   await chrome.alarms.clear(alarmName(origin));
   await badgeForJob(job, { model }, false);
@@ -45,7 +51,7 @@ async function finish(origin, job, model) {
 // and pollArguments, so the popup can offer to check again: polling retrieves that
 // same audit, while starting a new one would use another scan.
 async function stall(origin, job, model) {
-  await setResult(origin, { model, finishedAt: Date.now(), kind: job.kind });
+  await setResult(origin, { model, finishedAt: Date.now(), kind: job.kind, lang: storedLanguage(job) });
   await setJob(origin, { ...job, stalled: true, updatedAt: Date.now() });
   await chrome.alarms.clear(alarmName(origin));
   await badgeForJob(job, { model }, false);
@@ -100,7 +106,7 @@ async function drive(origin) {
       run = await runAudit({
         client,
         tool: job.tool,
-        args: state.pollArguments || { target: job.target },
+        args: state.pollArguments || startArguments(job),
         jobId: state.jobId,
         deadline: job.deadline,
         sleep,
@@ -131,7 +137,7 @@ async function resumeJobs() {
   for (const [origin, job] of Object.entries(jobs)) if (!job?.stalled) drive(origin);
 }
 
-async function startAudit({ origin, tabId, kind = DEFAULT_KIND }) {
+async function startAudit({ origin, tabId, kind = DEFAULT_KIND, lang }) {
   const target = originOf(origin);
   if (!target) return { ok: false, error: 'unsupported_origin' };
   const tool = AUDIT_TOOLS[kind];
@@ -144,11 +150,13 @@ async function startAudit({ origin, tabId, kind = DEFAULT_KIND }) {
   const now = Date.now();
   const tab = typeof tabId === 'number' ? tabId : null;
   // A stalled job is resumed, never restarted: its stored pollArguments retrieve the
-  // audit Sitelemetry is already running instead of paying a scan for a new one.
+  // audit Sitelemetry is already running instead of paying a scan for a new one,
+  // in the language it was started with.
   const job = existing
     ? { ...existing, stalled: false, busy: false, tabId: tab ?? existing.tabId, updatedAt: now, deadline: now + DEFAULT_DEADLINE_MS }
     : {
-      origin: target, target, kind, tool, jobId: null, pollArguments: null, retryAfterMs: null, polls: 0,
+      origin: target, target, kind, tool, lang: REPORT_LANGUAGES.includes(lang) ? lang : reportLanguage(uiLanguage()),
+      jobId: null, pollArguments: null, retryAfterMs: null, polls: 0,
       busy: false, dispatched: false, tabId: tab, startedAt: now, updatedAt: now, deadline: now + DEFAULT_DEADLINE_MS
     };
   await setJob(target, job);

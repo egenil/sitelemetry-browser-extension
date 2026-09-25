@@ -3,12 +3,12 @@
 // reads chrome.storage.local and re-renders when it changes.
 import { applyBadge } from '../shared/badge.js';
 import { buildFixPrompt } from '../shared/fix-prompt.js';
-import { localizeDocument, t } from '../shared/i18n.js';
+import { localizeDocument, reportLanguage, t, uiLanguage } from '../shared/i18n.js';
 import { SIGNUP_URL } from '../shared/links.js';
 import { SEVERITIES, isMeasured, sortBySeverity } from '../shared/outcome.js';
 import { freePlan, loadPlans } from '../shared/plans.js';
 import { getJob, getPlansCache, getResult, getSettings, originOf, saveSettings, setPlansCache } from '../shared/storage.js';
-import { formatTimestamp, notMeasuredText, planSection, problemText, runningPhaseKey, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
+import { formatTimestamp, notMeasuredSection, planSection, problemText, runningPhaseKey, severityCountText, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
 
 const MAX_FINDINGS = 10;
 const state = { tab: null, origin: null, settings: null, job: null, result: null, plans: null, error: null, busy: false, copy: null, promptOpen: false, shownResult: null };
@@ -70,7 +70,7 @@ function showCopyStatus(status, copied) {
 }
 
 async function copyFixPrompt(entry, ui) {
-  const text = buildFixPrompt(entry, { t });
+  const text = buildFixPrompt(entry, { t, language: uiLanguage() });
   let copied = false;
   try {
     await navigator.clipboard.writeText(text);
@@ -95,7 +95,7 @@ function renderFixPrompt(entry) {
   box.append(el('p', { class: 'small muted', text: t('fixPromptHint') }));
   const details = el('details', { class: 'prompt-details' });
   const area = el('textarea', { class: 'prompt-text', readonly: '', rows: '8', spellcheck: 'false', 'aria-label': t('fixPromptTextLabel') });
-  const fill = () => { if (!area.value) area.value = buildFixPrompt(entry, { t }); };
+  const fill = () => { if (!area.value) area.value = buildFixPrompt(entry, { t, language: uiLanguage() }); };
   details.append(el('summary', { class: 'small', text: t('fixPromptShow') }), area);
   details.addEventListener('toggle', () => {
     state.promptOpen = details.open;
@@ -108,6 +108,16 @@ function renderFixPrompt(entry) {
   box.append(details);
   button.addEventListener('click', () => copyFixPrompt(entry, { status, details }));
   return box;
+}
+
+// One "not measured" item: what was not measured, why (when the reason is
+// recognised) and, in smaller text, the reason exactly as the audit reported it.
+function renderNotMeasured(view) {
+  return el('li', {}, [
+    el('span', { class: 'nm-text', text: view.text }),
+    view.explanation ? el('span', { class: 'nm-explanation', text: view.explanation }) : null,
+    view.detail ? el('span', { class: 'nm-detail', text: view.detail }) : null
+  ]);
 }
 
 function renderResult(entry) {
@@ -129,7 +139,7 @@ function renderResult(entry) {
     if (model.passingChecks) meta.append(el('p', { class: 'small muted', text: t('passingChecks', [model.passingChecks]) }));
     const chips = el('div', { class: 'chips' });
     for (const severity of SEVERITIES) {
-      if (model.counts[severity] > 0) chips.append(el('span', { class: `chip ${severity}`, text: `${model.counts[severity]} ${severityLabel(severity, t)}` }));
+      if (model.counts[severity] > 0) chips.append(el('span', { class: `chip ${severity}`, text: severityCountText(severity, model.counts[severity], t) }));
     }
     if (chips.childElementCount) meta.append(chips);
     card.append(el('div', { class: 'score-block' }, [ring, meta]));
@@ -152,11 +162,11 @@ function renderResult(entry) {
     }
 
     if (model.status === 'partial') {
+      const section = notMeasuredSection(model, t);
       card.append(el('h3', { class: 'section-title', text: t('notMeasuredTitle') }));
-      card.append(el('p', { class: 'small muted', text: t('notMeasuredNote') }));
-      const list = el('ul', { class: 'small' });
-      for (const item of model.notMeasured) list.append(el('li', { text: notMeasuredText(item, t) }));
-      if (!model.notMeasured.length) list.append(el('li', { text: t('nmUnknown') }));
+      card.append(el('p', { class: 'small muted', text: section.note }));
+      const list = el('ul', { class: 'small nm-list' });
+      for (const view of section.items) list.append(renderNotMeasured(view));
       card.append(list);
     }
     card.append(renderFixPrompt(entry));
@@ -269,7 +279,9 @@ async function startAudit() {
       if (!$('ack').checked) return;
       await saveSettings({ acknowledgedAt: Date.now() });
     }
-    const response = await chrome.runtime.sendMessage({ type: 'audit:start', origin: state.origin, tabId: state.tab?.id, kind: 'security' });
+    // The report language follows the language the popup is shown in; it is sent
+    // with the first call only (the service keeps it for the job's poll results).
+    const response = await chrome.runtime.sendMessage({ type: 'audit:start', origin: state.origin, tabId: state.tab?.id, kind: 'security', lang: reportLanguage(uiLanguage()) });
     if (!response?.ok) state.error = response?.error || 'unknown';
   } catch (error) {
     state.error = 'unknown';

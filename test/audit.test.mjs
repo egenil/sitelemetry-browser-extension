@@ -47,6 +47,17 @@ test('runAudit re-sends pollArguments unchanged, waits retryAfterMs and reports 
   assert.equal(phaseLine(responses[0] ?? { content: [{ type: 'text', text: 'x\ny' }] }), 'x');
 });
 
+test('runAudit sends the report language with the start call only, then the pollArguments as returned', async () => {
+  const pollArguments = { target: 'https://ok.example/', jobId: 'mj_lang' };
+  const running = { structuredContent: { status: 'running', jobId: 'mj_lang', pollArguments, retryAfterMs: 1 } };
+  const responses = [running, running, { structuredContent: { status: 'completed', findings: [] } }];
+  const calls = [];
+  const client = { callTool: async (name, args) => { calls.push(structuredClone(args)); return responses.shift(); } };
+  const run = await runAudit({ client, tool: 'audit_security', args: { target: 'https://ok.example', lang: 'ja' }, deadline: Date.now() + 60_000, sleep: noSleep, minWaitMs: 1 });
+  assert.equal(run.outcome, 'result');
+  assert.deepEqual(calls, [{ target: 'https://ok.example', lang: 'ja' }, pollArguments, pollArguments]);
+});
+
 test('runAudit stops at the deadline and returns the arguments needed to resume', async () => {
   const pollArguments = { target: 'https://ok.example/', jobId: 'mj_2' };
   const client = { callTool: async () => ({ structuredContent: { status: 'running', jobId: 'mj_2', pollArguments, retryAfterMs: 10 } }) };
