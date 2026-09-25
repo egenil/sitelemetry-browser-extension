@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { REPORT_LANGUAGES, createTranslator, formatMessage, localizeDocument, reportLanguage, setFallbackMessages, t, uiLanguage } from '../src/shared/i18n.js';
 import { SEVERITIES } from '../src/shared/outcome.js';
 import { CHROME_LOCALES } from '../scripts/validate-manifest.mjs';
+import { APP_WORDS, REPORT_OR_APP, REPORT_WORDS } from './report-words.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const messages = JSON.parse(readFileSync(join(root, '_locales/en/messages.json'), 'utf8'));
@@ -143,6 +144,51 @@ test('no "not measured" text reads as a failure', () => {
     for (const [key, entry] of Object.entries(load(folder))) {
       if (/^(notMeasured|nm|explain)/.test(key)) assert.doesNotMatch(entry.message, FAILURE_WORDING[folder], `${folder}/${key}`);
     }
+  }
+});
+
+// Sitelemetry saves no report of an audit run through the general /mcp endpoint the
+// extension uses, so no message may send the user to one in the app. The words for
+// "report" and "app" appear only in the messages listed here, never together: the
+// app for the account, the verification, the terms and the API key; the report
+// language; "reported" by the audit; and the label of the report link, which the
+// popup shows only when the service sends a link (see test/popup.test.mjs). The
+// notes about findings, measurements or results that are not listed, and the job
+// errors, name neither.
+const APP_KEYS = Object.freeze(['stepVerifyOwnership', 'stepAcceptTerms', 'apiKeyHelp', 'getKeyLink']);
+const REPORT_KEYS = Object.freeze(['openReport', 'sentNote', 'privacyItemSent', 'noFindings', 'nmReasonDetail']);
+const NOTE_KEYS = Object.freeze([
+  'moreFindings', 'moreFindingsNotShown', 'findingsNotIncluded', 'findingsNoneIncluded', 'nmUnknown',
+  'passingMore', 'passingNotListed', 'passingLegacy', 'errorTimeoutJob', 'errorTransportJob', 'errorInterrupted'
+]);
+
+test('no message refers to a report in the Sitelemetry app', () => {
+  assert.deepEqual(Object.keys(REPORT_WORDS).sort(), folders);
+  for (const folder of folders) {
+    const locale = load(folder);
+    for (const [key, entry] of Object.entries(locale)) {
+      const report = REPORT_WORDS[folder].test(entry.message);
+      const app = APP_WORDS[folder].test(entry.message);
+      assert.ok(!(report && app), `${folder}/${key} names a report and the app: ${entry.message}`);
+      if (report) assert.ok(REPORT_KEYS.includes(key), `${folder}/${key} names a report: ${entry.message}`);
+      if (app) assert.ok(APP_KEYS.includes(key), `${folder}/${key} names the app: ${entry.message}`);
+    }
+    for (const key of NOTE_KEYS) assert.doesNotMatch(locale[key].message, REPORT_OR_APP[folder], `${folder}/${key}`);
+  }
+  // The job errors still name the button that retrieves the result.
+  assert.match(messages.errorTimeoutJob.message, /choose Check again to retrieve its result\.$/);
+  assert.match(messages.errorTransportJob.message, /choose Check again to retrieve its result\.$/);
+});
+
+test('the notes about findings that are not listed read as facts, not failures', () => {
+  for (const folder of folders) {
+    const locale = load(folder);
+    for (const key of ['moreFindings', 'moreFindingsNotShown', 'findingsNotIncluded', 'findingsNoneIncluded', 'nmUnknown']) {
+      assert.doesNotMatch(locale[key].message, FAILURE_WORDING[folder], `${folder}/${key}`);
+    }
+    // The prompt the note names is the one of the copy button.
+    const prompt = locale.fixPromptTextLabel.message.toLocaleLowerCase(locale.uiLanguageTag.message);
+    assert.ok(locale.moreFindings.message.toLocaleLowerCase(locale.uiLanguageTag.message).includes(prompt), `${folder}/moreFindings names ${prompt}`);
   }
 });
 

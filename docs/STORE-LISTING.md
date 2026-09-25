@@ -19,7 +19,8 @@ Sitelemetry Audit runs a security audit of the website in your current tab throu
 What you get
 - A security score from 0 to 100 with a grade and severity counts.
 - The top findings with location, evidence, impact and a concrete fix.
-- "What was not measured": checks that were skipped, unavailable or require ownership verification, each with its reason, such as paths the site redirects to its sign-in page or ports its firewall silently drops. Unmeasured checks are not passes.
+- "Passing checks": a collapsible section whose heading shows how many checks passed; open it to see each one, grouped by security module, with its evidence.
+- "What was not measured": a collapsible section whose heading shows how many checks were skipped, unavailable or require ownership verification; open it to see each one with its reason, such as paths the site redirects to its sign-in page or ports its firewall silently drops. Unmeasured checks are not passes.
 - "Copy AI fix prompt": copies a plain-text prompt built from the result, listing the findings and asking for a root cause, a step-by-step fix and a verification step for each, to paste into an AI assistant of your choice. The prompt is built on your device and only copied to your clipboard.
 - A toolbar badge with the last score for the site in that tab.
 - The audit keeps running after you close the popup; the result is stored for the site.
@@ -46,6 +47,12 @@ Open source under the MIT license.
 - Chrome Web Store: Developer Tools
 - Microsoft Edge Add-ons: Developer tools
 
+## What's new in 0.1.3
+
+Paste into the "what changed" note of the update (both stores; if 0.1.2 was never uploaded to a store, paste the 0.1.2 note below it as well):
+
+The popup now lists the checks that passed, not only their number: "Passing checks" opens to every passing check, grouped by security module, with its evidence. "Passing checks" and "What was not measured" are collapsible sections, closed by default, whose headings show how many items they hold. The notes under the findings now say exactly what is not listed: how many findings the popup list does not show and whether the AI fix prompt includes them, and how many findings Sitelemetry counted but did not include in the result; the AI fix prompt names what it leaves out the same way. No new permissions.
+
 ## What's new in 0.1.2
 
 Paste into the "what changed" note of the update (both stores):
@@ -61,7 +68,7 @@ The extension UI ships in English (default), Turkish, Spanish, German, French, P
 | Asset | Size | Notes |
 | --- | --- | --- |
 | Store icon | 128x128 PNG | `icons/icon128.png` (Chrome pads it; keep the 16 px transparent margin rule in mind if redesigning). |
-| Screenshots | 1280x800 or 640x400 PNG/JPEG, 1 to 5 | Suggested: (1) popup with a completed result, (2) popup with a partial result and "What was not measured", (3) popup while an audit runs, (4) settings page with a masked key and a successful connection test, (5) the plan box for a Free account. Use a site you own; blur nothing else is needed since no personal data appears. |
+| Screenshots | 1280x800 or 640x400 PNG/JPEG, 1 to 5 | Suggested: (1) popup with a completed result, (2) popup with a partial result and "What was not measured", (3) popup while an audit runs, (4) settings page with a masked key and a successful connection test, (5) the plan box for a Free account. Use a site you own; blur nothing else is needed since no personal data appears. The uploaded set is `store-assets/screenshot-1.png` to `screenshot-5.png` (1280x800). For 0.1.3, screenshot 2 was taken again from the 0.1.3 build: the whole popup of the same partial result in two panels side by side, with the new findings note, "Passing checks (64)" closed and "What was not measured (3)" open. Replace screenshot 2 in both stores with this file (see "Versioning and updates" in SUBMISSION.md); the one uploaded before still shows the removed note that more findings are listed in a full report in the app. |
 | Small promo tile (Chrome) | 440x280 PNG/JPEG | Optional but improves placement. |
 | Marquee promo tile (Chrome) | 1400x560 | Optional. |
 | Edge promotional tiles | 440x280 (small), 1400x560 (large) | Optional. |

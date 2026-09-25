@@ -225,12 +225,33 @@ test('the note names the causes only when an item is explained, and speaks of th
   ]);
   assert.equal(notMeasuredSection(raw, t).note, 'Unmeasured checks are not counted as passes.');
   assert.equal(notMeasuredSection(partial([...raw.notMeasured, entriesFor('en')[4]]), t).note, en.notMeasuredNoteExplained.message, 'a mixed list uses the scoped note');
-  assert.deepEqual(notMeasuredSection(partial([]), t), { note: 'Unmeasured checks are not counted as passes.', items: [{ text: en.nmUnknown.message, explanation: null, detail: null }] });
+  assert.deepEqual(notMeasuredSection(partial([]), t), { title: 'What was not measured (1)', note: 'Unmeasured checks are not counted as passes.', items: [{ text: en.nmUnknown.message, explanation: null, detail: null }] });
   for (const folder of ['tr', 'es', 'de', 'fr', 'pt_BR', 'it', 'ja', 'zh_CN']) {
     const locale = load(folder);
     const translate = createTranslator(locale, en);
     assert.equal(notMeasuredSection(partial(entriesFor('en')), translate).note, locale.notMeasuredNoteExplained.message, folder);
     assert.equal(notMeasuredSection(raw, translate).note, locale.notMeasuredNote.message, folder);
+  }
+});
+
+// The closed section's heading: the translated title and the number of items, with
+// the language's own parentheses; a line never starts with the number or its bracket.
+test('the section heading carries the number of items in every language', () => {
+  const section = (folder, notMeasured) => notMeasuredSection({ status: 'partial', notMeasured }, createTranslator(load(folder), en));
+  assert.equal(section('en', entriesFor('en')).title, 'What was not measured (7)');
+  assert.equal(section('tr', entriesFor('tr')).title, 'Neler ölçülmedi (7)');
+  assert.equal(section('de', entriesFor('en')).title, 'Was nicht gemessen wurde (7)');
+  assert.equal(section('fr', entriesFor('en')).title, 'Ce qui n’a pas été mesuré (7)');
+  assert.equal(section('ja', entriesFor('ja')).title, '測定されなかった項目（7件）');
+  assert.equal(section('zh_CN', entriesFor('en')).title, '未测量的内容（7 项）');
+  assert.equal(section('es', []).title, 'Qué no se midió (1)', 'the placeholder item is counted like the list shows it');
+  for (const folder of ['en', 'tr', 'es', 'de', 'fr', 'pt_BR', 'pt_PT', 'it', 'ja', 'zh_CN']) {
+    const locale = load(folder);
+    const { title, items } = section(folder, entriesFor('en').slice(0, 3));
+    assert.equal(items.length, 3, folder);
+    assert.ok(title.startsWith(locale.notMeasuredTitle.message), `${folder}: the title comes first`);
+    assert.ok(title.includes('3'), `${folder}: the count is shown`);
+    assert.doesNotMatch(title, / [(（\d]/, `${folder}: no breakable space before the count`);
   }
 });
 

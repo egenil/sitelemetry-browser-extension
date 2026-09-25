@@ -43,6 +43,8 @@ const MODULE_KEYS = Object.freeze({
   'engine-zap': 'moduleEngineZap',
   'engine-wpscan': 'moduleEngineWpscan'
 });
+// The modules in the order sitelemetry.com lists them.
+export const MODULE_IDS = Object.freeze(Object.keys(MODULE_KEYS));
 const STATUS_KEYS = Object.freeze({ unavailable: 'nmNotMeasured', partial: 'nmPartlyMeasured' });
 
 // Modules that probe well-known paths (/.env, /graphql, /admin, /package.json...).

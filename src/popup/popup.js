@@ -2,16 +2,16 @@
 // the running-job view. All network work happens in the service worker; the popup
 // reads chrome.storage.local and re-renders when it changes.
 import { applyBadge } from '../shared/badge.js';
-import { buildFixPrompt } from '../shared/fix-prompt.js';
+import { buildFixPrompt, composeFixPrompt } from '../shared/fix-prompt.js';
 import { localizeDocument, reportLanguage, t, uiLanguage } from '../shared/i18n.js';
 import { SIGNUP_URL } from '../shared/links.js';
 import { SEVERITIES, isMeasured, sortBySeverity } from '../shared/outcome.js';
 import { freePlan, loadPlans } from '../shared/plans.js';
 import { getJob, getPlansCache, getResult, getSettings, originOf, saveSettings, setPlansCache } from '../shared/storage.js';
-import { formatTimestamp, notMeasuredSection, planSection, problemText, runningPhaseKey, severityCountText, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
+import { findingsNotes, formatTimestamp, notMeasuredSection, passingSection, planSection, problemText, runningPhaseKey, severityCountText, severityLabel, statusHeading, verificationStep } from '../shared/text.js';
 
 const MAX_FINDINGS = 10;
-const state = { tab: null, origin: null, settings: null, job: null, result: null, plans: null, error: null, busy: false, copy: null, promptOpen: false, shownResult: null };
+const state = { tab: null, origin: null, settings: null, job: null, result: null, plans: null, error: null, busy: false, copy: null, promptOpen: false, openSections: {}, shownResult: null };
 const $ = (id) => document.getElementById(id);
 
 function el(tag, props = {}, children = []) {
@@ -120,6 +120,45 @@ function renderNotMeasured(view) {
   ]);
 }
 
+// "Passing checks" and "What was not measured" are disclosures: the heading, with
+// the number of items, opens the section. Each is closed for every new result and
+// stays open while the same result is shown again (a storage update, the plan
+// facts arriving). The open state is kept in memory only.
+function renderToggleSection(name, title, body) {
+  const details = el('details', { class: `toggle-section ${name}-section`, 'data-section': name });
+  details.append(el('summary', { class: `section-title ${name}-summary` }, [el('h3', { text: title })]), ...body);
+  details.addEventListener('toggle', () => { state.openSections[name] = details.open; });
+  if (state.openSections[name]) details.open = true;
+  return details;
+}
+
+function renderNotMeasuredSection(model) {
+  const section = notMeasuredSection(model, t);
+  const list = el('ul', { class: 'small nm-list' });
+  for (const view of section.items) list.append(renderNotMeasured(view));
+  return renderToggleSection('nm', section.title, [el('p', { class: 'small muted', text: section.note }), list]);
+}
+
+// The checks that passed, grouped by module: the check as the service named it and,
+// in smaller text, its evidence. The note (checks counted but not listed) comes
+// first, so it is read before the list it explains.
+function renderPassingSection(model) {
+  const section = passingSection(model, t);
+  if (!section) return null;
+  const body = section.note ? [el('p', { class: 'small muted passing-note', text: section.note })] : [];
+  body.push(...section.groups.map((group) => {
+    const list = el('ul', { class: 'small passing-list' });
+    for (const item of group.items) {
+      list.append(el('li', {}, [
+        el('span', { class: 'passing-title', text: item.title }),
+        item.evidence ? el('span', { class: 'passing-evidence', text: item.evidence }) : null
+      ]));
+    }
+    return el('div', { class: 'passing-group' }, [el('h4', { text: group.title }), list]);
+  }));
+  return renderToggleSection('passing', section.title, body);
+}
+
 function renderResult(entry) {
   const { model } = entry;
   const card = el('section', { class: 'card result' });
@@ -156,19 +195,17 @@ function renderResult(entry) {
     if (top.length) {
       card.append(el('h3', { class: 'section-title', text: t('topFindingsTitle') }));
       for (const finding of top) card.append(renderFinding(finding));
-      if (model.total > top.length) card.append(el('p', { class: 'small muted', text: t('moreFindings', [model.total - top.length]) }));
-    } else {
+    } else if (!(model.total > 0)) {
       card.append(el('p', { text: t('noFindings') }));
     }
+    // Only a result with more findings than the list shows needs the prompt built
+    // here, to tell whether the prompt includes the rest.
+    const inPrompt = model.findings.length > top.length ? composeFixPrompt(entry, { t, language: uiLanguage() }).listed : model.findings.length;
+    for (const note of findingsNotes(model, { shown: top.length, inPrompt }, t)) card.append(el('p', { class: 'small muted findings-note', text: note }));
 
-    if (model.status === 'partial') {
-      const section = notMeasuredSection(model, t);
-      card.append(el('h3', { class: 'section-title', text: t('notMeasuredTitle') }));
-      card.append(el('p', { class: 'small muted', text: section.note }));
-      const list = el('ul', { class: 'small nm-list' });
-      for (const view of section.items) list.append(renderNotMeasured(view));
-      card.append(list);
-    }
+    const passing = renderPassingSection(model);
+    if (passing) card.append(passing);
+    if (model.status === 'partial') card.append(renderNotMeasuredSection(model));
     card.append(renderFixPrompt(entry));
   } else {
     const problem = problemText(model, t);
@@ -180,6 +217,8 @@ function renderResult(entry) {
   }
 
   const links = el('div', { class: 'links' });
+  // Only a link the service sent: the general /mcp endpoint sends none, because
+  // Sitelemetry saves no report of these audits, and no other text promises one.
   if (model.reportUrl) links.append(link(t('openReport'), model.reportUrl));
   const step = verificationStep(model, t);
   if (step) {
@@ -237,8 +276,12 @@ function render() {
     resultView.replaceChildren();
     state.shownResult = null;
   } else if (state.shownResult?.finishedAt !== shown.finishedAt || state.shownResult.plans !== state.plans) {
+    // A rebuild keeps keyboard focus on the heading of a section that had it.
+    const focused = document.activeElement;
+    const section = focused?.localName === 'summary' && resultView.contains(focused) ? focused.parentElement?.getAttribute('data-section') : null;
     resultView.replaceChildren(renderResult(shown));
     state.shownResult = { finishedAt: shown.finishedAt, plans: state.plans };
+    if (section) resultView.querySelector(`details[data-section="${section}"] summary`)?.focus();
   }
 
   const free = freePlan(state.plans);
@@ -255,7 +298,10 @@ async function refresh() {
     const shown = state.result?.finishedAt;
     state.job = await getJob(state.origin);
     state.result = await getResult(state.origin);
-    if (state.result?.finishedAt !== shown) state.promptOpen = false;
+    if (state.result?.finishedAt !== shown) {
+      state.promptOpen = false;
+      state.openSections = {};
+    }
   }
   render();
 }
