@@ -1,0 +1,63 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "[Security audit - https://redirects.example]\nScore: 86/100 (B)\nFindings: 1 medium, 1 low (2 total) - 38 passing checks\n\nContext:\n- Audit coverage for: Professional."
+    }
+  ],
+  "structuredContent": {
+    "target": "https://redirects.example",
+    "kind": "Security audit",
+    "status": "partial",
+    "coverageStatus": "partial",
+    "score": 86,
+    "grade": "B",
+    "counts": { "critical": 0, "high": 0, "medium": 1, "low": 1, "info": 0 },
+    "total": 2,
+    "returnedFindings": 2,
+    "findingsTruncated": false,
+    "passingChecks": 38,
+    "auditDetails": {
+      "scope": {
+        "method": "public-signals",
+        "status": "partial",
+        "plan": "professional",
+        "profile": "baseline",
+        "selectedModules": ["dns", "dns-email", "rdap", "tls", "http-headers", "mitm-posture", "tech-fingerprint", "http-methods", "exposure", "api-exposure", "auth-surface", "supply-chain", "ports", "port-intel", "secret-exposure"],
+        "moduleResults": [
+          { "module": "dns", "status": "measured", "checkCount": 2, "findingCount": 0, "reasons": [] },
+          { "module": "tls", "status": "measured", "checkCount": 4, "findingCount": 0, "reasons": [] },
+          { "module": "exposure", "status": "unavailable", "checkCount": 14, "findingCount": 0, "reasons": ["HTTP 307; redirect was not followed"] },
+          { "module": "api-exposure", "status": "partial", "checkCount": 9, "findingCount": 0, "reasons": ["HTTP 307; redirect was not followed", "HTTP 308; redirect was not followed"] },
+          { "module": "auth-surface", "status": "partial", "checkCount": 8, "findingCount": 0, "reasons": ["HTTP 307; redirect was not followed", "HTTP 308; redirect was not followed"] },
+          { "module": "supply-chain", "status": "unavailable", "checkCount": 6, "findingCount": 0, "reasons": ["HTTP 307; redirect was not followed"] },
+          { "module": "ports", "status": "partial", "checkCount": 3, "findingCount": 0, "reasons": ["12 timeout/filtered; 0 network error"] },
+          { "module": "port-intel", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["12 timeout/filtered; 0 network error"] },
+          { "module": "secret-exposure", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["0/7 resource(s) could not be assessed; 7 script(s) remained outside the bounded scan."] }
+        ]
+      }
+    },
+    "findings": [
+      {
+        "findingKey": "sf2:security-audit:id:http.header.csp-missing:loc:11aa22bb33cc44dd55ee66ff7788:occ:1",
+        "severity": "medium",
+        "title": "Content-Security-Policy header is missing",
+        "evidence": "Affected location: https://redirects.example/\nThe HTTPS response carried no Content-Security-Policy header.",
+        "impact": "Without a policy the browser runs any injected script with the page's privileges.",
+        "remediation": "Send a Content-Security-Policy header that allows only the script and style sources the site uses.",
+        "category": "http-headers",
+        "location": "https://redirects.example/"
+      },
+      {
+        "findingKey": "sf2:security-audit:id:tech.server-disclosure:loc:11aa22bb33cc44dd55ee66ff7788:occ:1",
+        "severity": "low",
+        "title": "Response headers disclose the framework",
+        "evidence": "Affected location: https://redirects.example/\nX-Powered-By: Next.js",
+        "impact": "Framework details help an attacker pick known exploits.",
+        "remediation": "Disable the X-Powered-By header (poweredByHeader: false in next.config.js).",
+        "category": "tech-fingerprint",
+        "location": "https://redirects.example/"
+      }
+    ]
+  }
+}

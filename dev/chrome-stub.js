@@ -7,12 +7,21 @@
   const scenario = script?.dataset.scenario || 'completed';
   const root = new URL('../../', document.baseURI).href;
   const tabUrl = script?.dataset.url || (scenario === 'unsupported' ? 'chrome://extensions' : 'https://www.example.com/pricing');
+  // The browser UI language, as chrome.i18n.getUILanguage() reports it (?lang=tr, pt-BR, zh-CN...).
+  const uiLanguage = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(script?.dataset.lang || '') ? script.dataset.lang : 'en';
 
   // Messages, synchronously, so chrome.i18n.getMessage works from the first call.
-  const request = new XMLHttpRequest();
-  request.open('GET', `${root}_locales/en/messages.json`, false);
-  request.send();
-  const messages = JSON.parse(request.responseText);
+  // Like Chrome: the exact locale, then the language alone, backed by the default
+  // locale for any key the translation lacks.
+  const loadMessages = (folder) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', `${root}_locales/${folder}/messages.json`, false);
+    request.send();
+    return request.status === 200 ? JSON.parse(request.responseText) : null;
+  };
+  const exact = uiLanguage.replace('-', '_');
+  const translated = exact === 'en' ? null : loadMessages(exact) || loadMessages(exact.split('_')[0]);
+  const messages = { ...loadMessages('en'), ...(translated || {}) };
   const getMessage = (key, subs = []) => {
     const entry = messages[key];
     if (!entry) return '';
@@ -72,7 +81,7 @@
     }
   };
 
-  async function buildModel(origin) {
+  async function buildModel(origin, lang) {
     const { interpretOutcome } = await import(`${root}src/shared/outcome.js`);
     const { McpHttpError } = await import(`${root}src/shared/mcp-client.js`);
     const fixture = async (name) => (await fetch(`${root}test/fixtures/${name}`)).json();
@@ -82,6 +91,10 @@
     switch (scenario) {
       case 'free': return interpretOutcome({ outcome: 'result', tool, jobId: 'mj_demo', result: await fixture('security-partial-free.json') }, context);
       case 'full': return interpretOutcome({ outcome: 'result', tool, jobId: 'mj_demo', result: await fixture('full-partial.json') }, context);
+      // A site whose unknown paths redirect to its sign-in page (307, trailing-slash
+      // paths 308) behind a firewall that drops probes to closed ports. The service
+      // answers in the requested report language (English and Turkish fixtures).
+      case 'redirects': return interpretOutcome({ outcome: 'result', tool, jobId: 'mj_demo', result: await fixture(lang === 'tr' ? 'security-partial-redirects-tr.json' : 'security-partial-redirects.json') }, context);
       case 'quota': return { ...interpretOutcome({ outcome: 'result', tool, result: gate('usage_limit_reached', 'Audit not started. No audit quota was used. The current audit allowance is exhausted. Retry after the allowance resets.') }, context), remainingScans: 0 };
       case 'plan': return interpretOutcome({ outcome: 'result', tool, result: gate('entitlement_required', 'Audit not started. No audit quota was used. The requested audit requires Starter or higher access and is not included in the connected Free account.') }, context);
       case 'verify': return interpretOutcome({ outcome: 'result', tool, result: gate('target_verification_required', 'Audit not started. No audit quota was used. Verify ownership of this target in Sitelemetry or Google Search Console before retrying. No plan change is required.') }, context);
@@ -98,26 +111,27 @@
       if (message?.type !== 'audit:start') return { ok: true };
       const origin = message.origin;
       const now = Date.now();
-      const job = { origin, target: origin, kind: 'security', tool: 'audit_security', jobId: null, pollArguments: null, polls: 0, busy: false, tabId: 1, startedAt: now, updatedAt: now, deadline: now + 1_200_000 };
+      const lang = message.lang || 'en';
+      const job = { origin, target: origin, kind: 'security', tool: 'audit_security', lang, jobId: null, pollArguments: null, polls: 0, busy: false, tabId: 1, startedAt: now, updatedAt: now, deadline: now + 1_200_000 };
       await local.set({ jobs: { [origin]: job } });
       setTimeout(() => local.set({ jobs: { [origin]: { ...job, jobId: 'mj_demo', polls: 1 } } }), 700);
       if (scenario !== 'running') {
         setTimeout(async () => {
-          const model = await buildModel(origin);
-          await local.set({ jobs: {}, results: { [origin]: { model, finishedAt: Date.now(), kind: model.kind } } });
+          const model = await buildModel(origin, lang);
+          await local.set({ jobs: {}, results: { [origin]: { model, finishedAt: Date.now(), kind: model.kind, lang } } });
         }, 2200);
       }
       return { ok: true, job };
     },
     connect: () => ({ postMessage() {}, onDisconnect: { addListener() {} }, onMessage: { addListener() {} } }),
-    openOptionsPage: () => { window.top.location.search = '?page=options'; },
+    openOptionsPage: () => { window.top.location.search = `?page=options&lang=${encodeURIComponent(uiLanguage)}`; },
     onMessage: { addListener() {} },
     onConnect: { addListener() {} }
   };
 
   const noop = async () => {};
   window.chrome = {
-    i18n: { getMessage },
+    i18n: { getMessage, getUILanguage: () => uiLanguage },
     storage: { local, onChanged: { addListener: (fn) => listeners.push(fn) } },
     tabs: { query: async () => [{ id: 1, url: tabUrl, active: true }] },
     runtime,

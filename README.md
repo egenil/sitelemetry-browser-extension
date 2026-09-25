@@ -34,11 +34,15 @@ The key is stored with `chrome.storage.local` only (never the synced storage are
 2. Click **Audit this site**. The first time, tick the ownership acknowledgement.
 3. The audit runs on the Sitelemetry side. You can close the popup: the service worker keeps polling with the server's `pollArguments` and, if the browser suspends the worker, a `chrome.alarms` wake-up resumes the job from its stored state. The result is stored per site origin.
 4. If the audit is still running when the extension's time budget (20 minutes) is over, the job is kept with its `jobId` and `pollArguments` and the button becomes **Check again**: it retrieves that same audit, so no second scan of the allowance is used. The job is only discarded once Sitelemetry answers with a final result.
-5. Reopen the popup to see the score, the grade, severity counts, the top findings (each with location, evidence, impact and fix), **What was not measured** (unmeasured checks are not passes), a link to the full report when the server provides one, and the next step when ownership verification or the authorization terms are required.
-6. **Copy AI fix prompt** copies a plain-text prompt built from the stored result to the clipboard, to paste into an AI assistant of your choice. It lists the stored findings (most severe first) with their evidence and suggested fix, what was not measured, and asks for the root cause, an exact fix and a way to verify each one. The prompt is built on the device and only copied to the clipboard; nothing is sent. Finding text is marked as data and neutralized so it cannot pose as instructions, and the prompt never contains the API key or job details. It stays within 30,000 characters; for a very large result the least severe findings are left out and the prompt says how many. **Show the prompt** opens the same text in a read-only field if copying is not possible.
+5. Reopen the popup to see the score, the grade, severity counts, the top findings (each with location, evidence, impact and fix), **What was not measured**, a link to the full report when the server provides one, and the next step when ownership verification or the authorization terms are required. What was not measured names each module as sitelemetry.com does, says whether it was not measured or partly measured, and explains the reason when the extension recognises it: paths the site redirects (for example to its sign-in page), rate-limits or leaves unanswered, ports its firewall silently drops, scripts beyond the per-audit scan limit. The reason exactly as Sitelemetry reported it stays under each explanation. Unmeasured checks are not passes.
+6. **Copy AI fix prompt** copies a plain-text prompt built from the stored result to the clipboard, to paste into an AI assistant of your choice. It lists the stored findings (most severe first) with their evidence and suggested fix, what was not measured and why, and asks for the root cause, an exact fix and a way to verify each one, answered in your browser's language. The prompt is built on the device and only copied to the clipboard; nothing is sent. Finding text is marked as data and neutralized so it cannot pose as instructions, and the prompt never contains the API key or job details. It stays within 30,000 characters; for a very large result the least severe findings are left out and the prompt says how many. **Show the prompt** opens the same text in a read-only field if copying is not possible.
 7. The toolbar badge shows the last score for the site in that tab.
 
 Results, gates and errors are reported as statuses, as in the Sitelemetry CI clients: `completed`, `partial`, `blocked`, `quota_exhausted`, `plan_required` and `verification_required`. A gate never starts an audit and never uses allowance.
+
+## Languages
+
+The popup and the settings page are available in the nine Sitelemetry languages: English, Turkish, Spanish, German, French, Portuguese, Italian, Japanese and Simplified Chinese (`_locales/en`, `tr`, `es`, `de`, `fr`, `pt_BR`, `pt_PT`, `it`, `ja`, `zh_CN`). Chrome and Edge pick the translation from the browser's UI language; other languages, including Traditional Chinese, show English. The audit is requested in the same language (the `lang` argument of `audit_security`: `en`, `tr`, `es`, `de`, `fr`, `pt`, `it`, `ja` or `zh`), so the findings and reasons Sitelemetry returns read like the rest of the popup. The language is sent with the call that starts the audit only; polls re-send the server's `pollArguments` unchanged.
 
 ## Plans and quota
 
@@ -63,7 +67,7 @@ The settings page accepts an `https://` base URL for a staging deployment. The m
 
 ## What the extension sends and stores
 
-- Sent to the configured Sitelemetry base URL, only when you click **Audit this site**: the site origin (for example `https://example.com`), the audit kind (`security`) and your API key as the bearer token; then the server's `pollArguments` unchanged while the job runs. **Test connection** sends the MCP `initialize` request. The plan catalogue request carries no user data.
+- Sent to the configured Sitelemetry base URL, only when you click **Audit this site**: the site origin (for example `https://example.com`), the audit kind (`security`), the report language (a language code such as `tr`, from the browser's UI language) and your API key as the bearer token; then the server's `pollArguments` unchanged while the job runs. **Test connection** sends the MCP `initialize` request. The plan catalogue request carries no user data.
 - Stored on this device: see the permissions table. Results can contain URLs and response details of the audited site. Remove the key in the settings or uninstall the extension to delete everything.
 - Copy AI fix prompt: built on this device from the stored result and written only to the clipboard. Nothing is sent to Sitelemetry or anywhere else.
 - Never: page content, browsing history, cookies, analytics or crash reports. See [docs/PRIVACY.md](docs/PRIVACY.md).
@@ -79,23 +83,26 @@ npm run icons     # regenerate icons/*.png (dependency-free PNG writer)
 npm run pack      # dist/sitelemetry-audit-<version>.zip for both stores (PowerShell)
 ```
 
-`dev/harness.html` renders the popup and the options page in a normal browser tab with a stubbed `chrome.*` API (`node dev/serve.mjs`, then open the printed URL) for layout work without loading the extension; scenarios are selected with query parameters (see the file header).
+`dev/harness.html` renders the popup and the options page in a normal browser tab with a stubbed `chrome.*` API (`node dev/serve.mjs`, then open the printed URL) for layout work without loading the extension; scenarios and the browser UI language (`&lang=tr`, `pt-BR`, `zh-CN`...) are selected with query parameters (see the file header).
+
+Translations: every key of `_locales/en/messages.json` must exist in every locale with the same placeholders; `npm test` checks this, and `npm run check` checks the locale folder names and the translated store description length (132 characters).
 
 Layout:
 
 ```
 manifest.json               MV3 manifest (permissions, CSP, service worker, popup, options)
-_locales/en/messages.json   every user-facing string (English defaults; add locales here)
+_locales/                   every user-facing string: en (default) and tr, es, de, fr, pt_BR, pt_PT, it, ja, zh_CN
 icons/                      16/32/48/128 PNG icons generated by scripts/make-icons.mjs
 src/shared/mcp-client.js    JSON-RPC over HTTP client for {base}/mcp (initialize, tools/call)
 src/shared/audit.js         start/poll loop: re-sends pollArguments, honours retryAfterMs, resumable
 src/shared/outcome.js       status classification and findings normalization
 src/shared/text.js          headings, next steps and the plan box through the translator
+src/shared/not-measured.js  "What was not measured": module names, status words, explanations
 src/shared/fix-prompt.js    the "Copy AI fix prompt" text, built from a stored result (no DOM)
 src/shared/plans.js         GET /api/plans with a one-day cache
 src/shared/storage.js       chrome.storage.local access, origin and base URL helpers
 src/shared/badge.js         toolbar badge text and colour
-src/shared/i18n.js          chrome.i18n wrapper with a Node-compatible fallback
+src/shared/i18n.js          chrome.i18n wrapper with a Node fallback for any locale; report language
 src/shared/links.js         pricing, app and sign-up links with utm parameters
 src/background/service-worker.js   audit driver, alarms, badge, messages
 src/popup/                  popup page, styles and rendering

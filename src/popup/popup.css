@@ -140,3 +140,7 @@ body { width: 380px; min-height: 200px; }
 }
 .prompt-text:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .offscreen { position: fixed; top: 0; left: -10000px; width: 1px; height: 1px; opacity: 0; }
+
+.nm-list li { margin: 4px 0; overflow-wrap: anywhere; }
+.nm-list .nm-explanation { display: block; margin-top: 2px; }
+.nm-list .nm-detail { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); word-break: break-word; }

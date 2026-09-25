@@ -3,6 +3,7 @@
 import { freePlan, paidPlans } from './plans.js';
 import { APP_URL, PRICING_URL } from './links.js';
 import { McpHttpError } from './mcp-client.js';
+import { notMeasuredView } from './not-measured.js';
 import { clip } from './outcome.js';
 
 const STATUS_KEYS = Object.freeze({
@@ -68,8 +69,21 @@ export function runningPhaseKey(job) {
   return job?.jobId || job?.polls > 0 ? 'runningOnService' : 'runningStarting';
 }
 
-export const notMeasuredText = (entry, t) => t(entry.key, entry.subs);
+export { notMeasuredText, notMeasuredView } from './not-measured.js';
 export const severityLabel = (severity, t) => t(`severity_${severity}`);
+// A severity count chip: "3 critical", or "crítico: 3" in a language where the
+// label comes first, so the adjective never has to agree with the number.
+export const severityCountText = (severity, count, t) => t('severityCount', [count, severityLabel(severity, t)]);
+
+// The "What was not measured" section of a partial result: one view per entry and
+// the note under the heading. The note that names the causes is used only when an
+// item has an explanation, and it speaks of those items only: a reason the
+// extension does not recognise can be anything, a service-side failure included.
+export function notMeasuredSection(model, t) {
+  const items = (model.notMeasured || []).map((entry) => notMeasuredView(entry, t));
+  if (!items.length) items.push({ text: t('nmUnknown'), explanation: null, detail: null });
+  return { note: t(items.some((item) => item.explanation) ? 'notMeasuredNoteExplained' : 'notMeasuredNote'), items };
+}
 
 export function kindLabel(id, t) {
   const key = KIND_KEYS[id];

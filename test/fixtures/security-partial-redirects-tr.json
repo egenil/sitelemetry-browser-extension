@@ -1,0 +1,63 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "[Güvenlik denetimi - https://redirects.example]\nPuan: 86/100 (B)\nBulgular: 1 orta, 1 düşük (toplam 2) - 38 başarılı kontrol\n\nBağlam:\n- Denetim kapsamı: Professional."
+    }
+  ],
+  "structuredContent": {
+    "target": "https://redirects.example",
+    "kind": "Security audit",
+    "status": "partial",
+    "coverageStatus": "partial",
+    "score": 86,
+    "grade": "B",
+    "counts": { "critical": 0, "high": 0, "medium": 1, "low": 1, "info": 0 },
+    "total": 2,
+    "returnedFindings": 2,
+    "findingsTruncated": false,
+    "passingChecks": 38,
+    "auditDetails": {
+      "scope": {
+        "method": "public-signals",
+        "status": "partial",
+        "plan": "professional",
+        "profile": "baseline",
+        "selectedModules": ["dns", "dns-email", "rdap", "tls", "http-headers", "mitm-posture", "tech-fingerprint", "http-methods", "exposure", "api-exposure", "auth-surface", "supply-chain", "ports", "port-intel", "secret-exposure"],
+        "moduleResults": [
+          { "module": "dns", "status": "measured", "checkCount": 2, "findingCount": 0, "reasons": [] },
+          { "module": "tls", "status": "measured", "checkCount": 4, "findingCount": 0, "reasons": [] },
+          { "module": "exposure", "status": "unavailable", "checkCount": 14, "findingCount": 0, "reasons": ["HTTP 307; yönlendirme takip edilmedi"] },
+          { "module": "api-exposure", "status": "partial", "checkCount": 9, "findingCount": 0, "reasons": ["HTTP 307; yönlendirme takip edilmedi", "HTTP 308; yönlendirme takip edilmedi"] },
+          { "module": "auth-surface", "status": "partial", "checkCount": 8, "findingCount": 0, "reasons": ["HTTP 307; yönlendirme takip edilmedi", "HTTP 308; yönlendirme takip edilmedi"] },
+          { "module": "supply-chain", "status": "unavailable", "checkCount": 6, "findingCount": 0, "reasons": ["HTTP 307; yönlendirme takip edilmedi"] },
+          { "module": "ports", "status": "partial", "checkCount": 3, "findingCount": 0, "reasons": ["12 zaman aşımı/filtreli; 0 ağ hatası"] },
+          { "module": "port-intel", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["12 zaman aşımı/filtreli; 0 ağ hatası"] },
+          { "module": "secret-exposure", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["0/7 kaynak değerlendirilemedi; 7 betik sınırlı tarama kapsamı dışında kaldı."] }
+        ]
+      }
+    },
+    "findings": [
+      {
+        "findingKey": "sf2:security-audit:id:http.header.csp-missing:loc:11aa22bb33cc44dd55ee66ff7788:occ:1",
+        "severity": "medium",
+        "title": "Content-Security-Policy başlığı eksik",
+        "evidence": "Etkilenen konum: https://redirects.example/\nHTTPS yanıtında Content-Security-Policy başlığı yoktu.",
+        "impact": "Politika olmadan tarayıcı, enjekte edilen her betiği sayfanın yetkileriyle çalıştırır.",
+        "remediation": "Yalnızca sitenin kullandığı betik ve stil kaynaklarına izin veren bir Content-Security-Policy başlığı gönderin.",
+        "category": "http-headers",
+        "location": "https://redirects.example/"
+      },
+      {
+        "findingKey": "sf2:security-audit:id:tech.server-disclosure:loc:11aa22bb33cc44dd55ee66ff7788:occ:1",
+        "severity": "low",
+        "title": "Yanıt başlıkları çatıyı ifşa ediyor",
+        "evidence": "Etkilenen konum: https://redirects.example/\nX-Powered-By: Next.js",
+        "impact": "Çatı bilgisi saldırganın bilinen açıkları seçmesine yardım eder.",
+        "remediation": "X-Powered-By başlığını kapatın (next.config.js içinde poweredByHeader: false).",
+        "category": "tech-fingerprint",
+        "location": "https://redirects.example/"
+      }
+    ]
+  }
+}

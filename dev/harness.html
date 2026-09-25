@@ -6,11 +6,15 @@
 
   Serve the repository root (node dev/serve.mjs) and open /dev/harness.html with:
     ?scenario=completed|free|full|quota|plan|verify|consent|unauthorized|forbidden|transport|running|stalled
+    ?scenario=redirects    partial result of a site that redirects unknown paths to its
+                           sign-in page (307/308) behind a firewall; "What was not measured"
     ?scenario=nokey        no API key stored (setup view)
     ?scenario=notacked     key stored, ownership notice not yet acknowledged
     ?scenario=unsupported  active tab is a browser page
     ?page=options          the settings page instead of the popup
     &url=https://www.example.com/path   the active tab URL
+    &lang=tr               the browser UI language (chrome.i18n.getUILanguage()): en, tr, es,
+                           de, fr, pt-BR, pt-PT, it, ja, zh-CN, or any other tag (English UI)
 -->
 <html lang="en">
 <head>
@@ -33,11 +37,23 @@
     <a href="?scenario=transport">transport</a>
     <a href="?scenario=running">running</a>
     <a href="?scenario=stalled">stalled (check again)</a>
+    <a href="?scenario=redirects">redirects + firewall (not measured)</a>
     <a href="?scenario=nokey">no key</a>
     <a href="?scenario=notacked">not acknowledged</a>
     <a href="?scenario=unsupported">unsupported page</a>
     <span>Page:</span>
     <a href="?page=options">options</a>
+    <span>Language:</span>
+    <a href="?lang=en">en</a>
+    <a href="?lang=tr">tr</a>
+    <a href="?lang=es">es</a>
+    <a href="?lang=de">de</a>
+    <a href="?lang=fr">fr</a>
+    <a href="?lang=pt-BR">pt-BR</a>
+    <a href="?lang=it">it</a>
+    <a href="?lang=ja">ja</a>
+    <a href="?lang=zh-CN">zh-CN</a>
+    <a href="?lang=zh-TW">zh-TW</a>
   </nav>
   <iframe id="frame" title="extension page"></iframe>
   <script type="module" src="harness.js"></script>

@@ -44,6 +44,8 @@ Not targeted by this package. Firefox needs `browser_specific_settings.gecko.id`
 
 ## Versioning and updates
 
-Version numbers must increase with every store upload (`0.1.0` -> `0.1.1`).
+Version numbers must increase with every store upload (`0.1.0` -> `0.1.1` -> `0.1.2`).
+
+For 0.1.2 no permission, host permission or data use changes: the package adds translations (`_locales/tr`, `es`, `de`, `fr`, `pt_BR`, `pt_PT`, `it`, `ja`, `zh_CN`), and the popup now sends the browser's UI language as the report language (the existing `lang` argument of `audit_security`, a code such as `tr`) with the request that starts an audit, to the same Sitelemetry host as before. It is not personal data and fits none of the privacy-practices categories, so those answers stay as they are; upload the refreshed PRIVACY.md text (it now names the report language) to the hosted policy URL and paste "What's new in 0.1.2" from STORE-LISTING.md into the update notes. The store picks up the translated name and short description from the package; nothing else in the listing has to change.
 
 For 0.1.1 no permission, host permission or data use changes: the new **Copy AI fix prompt** button writes to the clipboard from the popup's click handler (no `clipboardWrite` permission) and makes no request, so the privacy practices answers stay as they are. Mention the button in the "what changed" notes of the update and upload the refreshed PRIVACY.md text to the hosted policy URL. Keep `manifest.json`, `src/shared/version.js` and `package.json` in sync (the tests fail otherwise), describe the change in CHANGELOG.md, run `npm run pack`, upload to both stores.

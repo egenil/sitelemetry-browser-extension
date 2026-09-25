@@ -237,3 +237,51 @@ test('a running job never stores the service text written for MCP clients', asyn
     assert.doesNotMatch(snapshot, /"phase"/);
   }
 });
+
+// The service keeps the report language of a job for its result, and its polls
+// accept only the pollArguments it returned: the language goes with the call that
+// starts the audit and never with a poll.
+test('the report language is sent with the first call only and kept with the job and the result', async () => {
+  const target = 'https://ok.example';
+  const chrome = stubChrome(connected());
+  await loadWorker();
+  const before = server.toolCalls().length;
+
+  const response = await sendStart(chrome, { origin: target, tabId: null, lang: 'tr' });
+  assert.deepEqual([response.ok, response.job.lang], [true, 'tr']);
+  const entry = await waitFor(() => chrome.store.results?.[target], 'the stored result');
+  assert.equal(entry.lang, 'tr');
+  assert.equal(entry.model.status, 'completed');
+
+  const calls = server.toolCalls().slice(before).map((call) => call.body.params.arguments);
+  assert.deepEqual(calls[0], { target, lang: 'tr' }, 'the start call carries the language');
+  const polls = calls.slice(1);
+  assert.equal(polls.length, 2);
+  for (const args of polls) {
+    assert.deepEqual(args, { target: 'https://ok.example/', jobId: entry.model.jobId }, 'polls re-send the pollArguments exactly');
+  }
+});
+
+test('a report language outside the service list is never sent; the UI language decides', async () => {
+  const target = 'https://sync.example';
+  const chrome = stubChrome(connected());
+  globalThis.chrome.i18n = { getUILanguage: () => 'ja-JP', getMessage: () => '' };
+  await loadWorker();
+  const before = server.toolCalls().length;
+
+  const response = await sendStart(chrome, { origin: target, tabId: null, lang: 'xx; drop' });
+  assert.equal(response.job.lang, 'ja');
+  await waitFor(() => chrome.store.results?.[target], 'the stored result');
+  assert.deepEqual(server.toolCalls().slice(before).map((call) => call.body.params.arguments), [{ target, lang: 'ja' }]);
+});
+
+test('a job stored by 0.1.1 (no language) starts and resumes without one', async () => {
+  const fresh = 'https://sync.example';
+  const chrome = stubChrome(connected({ jobs: { [fresh]: storedJob(fresh) } }));
+  const before = server.toolCalls().length;
+  await loadWorker();
+
+  const entry = await waitFor(() => chrome.store.results?.[fresh], 'the stored result');
+  assert.equal(entry.lang, null);
+  assert.deepEqual(server.toolCalls().slice(before).map((call) => call.body.params.arguments), [{ target: fresh }]);
+});
