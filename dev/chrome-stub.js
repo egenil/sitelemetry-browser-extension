@@ -58,6 +58,29 @@
       const model = interpretOutcome({ outcome: 'timeout', tool: 'audit_security', jobId: 'mj_demo' }, { kind: 'security', target: origin });
       store.results = { [origin]: { model, finishedAt: Date.now(), kind: 'security' } };
     }
+    // A result stored by 0.1.2: the count of passing checks without their list.
+    if (scenario === 'legacy') {
+      const origin = new URL(tabUrl).origin;
+      const { interpretOutcome } = await import(`${root}src/shared/outcome.js`);
+      const result = await (await fetch(`${root}test/fixtures/security-completed.json`)).json();
+      const { passingItems, ...model } = interpretOutcome({ outcome: 'result', tool: 'audit_security', jobId: 'mj_demo', result }, { kind: 'security', target: origin });
+      store.results = { [origin]: { model, finishedAt: Date.now() - 86_400_000, kind: 'security', lang: 'en' } };
+    }
+    // More findings than the popup lists (14 sent) and than the service sent (20
+    // counted): the notes under the findings, shown at once.
+    if (scenario === 'many') {
+      const origin = new URL(tabUrl).origin;
+      const { interpretOutcome } = await import(`${root}src/shared/outcome.js`);
+      const result = await (await fetch(`${root}test/fixtures/security-completed.json`)).json();
+      const severities = ['critical', 'high', 'medium', 'low', 'info'];
+      const base = result.structuredContent.findings;
+      result.structuredContent.findings = Array.from({ length: 14 }, (_, index) => ({
+        ...base[index % base.length], findingKey: `demo-${index}`, severity: severities[index % severities.length], title: `Demo finding ${index + 1}`
+      }));
+      Object.assign(result.structuredContent, { total: 20, returnedFindings: 14, findingsTruncated: true, counts: { critical: 4, high: 4, medium: 4, low: 4, info: 4 } });
+      const model = interpretOutcome({ outcome: 'result', tool: 'audit_security', jobId: 'mj_demo', result }, { kind: 'security', target: origin });
+      store.results = { [origin]: { model, finishedAt: Date.now() - 3_600_000, kind: 'security', lang: 'en' } };
+    }
   })();
   const clone = (value) => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
   const local = {

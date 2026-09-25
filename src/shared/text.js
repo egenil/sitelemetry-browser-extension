@@ -70,19 +70,40 @@ export function runningPhaseKey(job) {
 }
 
 export { notMeasuredText, notMeasuredView } from './not-measured.js';
+export { passingSection } from './passing.js';
 export const severityLabel = (severity, t) => t(`severity_${severity}`);
 // A severity count chip: "3 critical", or "crítico: 3" in a language where the
 // label comes first, so the adjective never has to agree with the number.
 export const severityCountText = (severity, count, t) => t('severityCount', [count, severityLabel(severity, t)]);
 
-// The "What was not measured" section of a partial result: one view per entry and
-// the note under the heading. The note that names the causes is used only when an
-// item has an explanation, and it speaks of those items only: a reason the
+// The "What was not measured" section of a partial result: the heading with the
+// number of items (the popup shows it on the closed section), one view per entry
+// and the note under the heading. The note that names the causes is used only when
+// an item has an explanation, and it speaks of those items only: a reason the
 // extension does not recognise can be anything, a service-side failure included.
 export function notMeasuredSection(model, t) {
   const items = (model.notMeasured || []).map((entry) => notMeasuredView(entry, t));
   if (!items.length) items.push({ text: t('nmUnknown'), explanation: null, detail: null });
-  return { note: t(items.some((item) => item.explanation) ? 'notMeasuredNoteExplained' : 'notMeasuredNote'), items };
+  return {
+    title: t('sectionCount', [t('notMeasuredTitle'), items.length]),
+    note: t(items.some((item) => item.explanation) ? 'notMeasuredNoteExplained' : 'notMeasuredNote'),
+    items
+  };
+}
+
+// The notes under the top findings. shown: the findings the popup lists; inPrompt:
+// how many stored findings the AI fix prompt lists (composeFixPrompt). Findings of
+// the stored result beyond the list are named as such, with the prompt when it
+// includes all of them; findings the service counted but did not send are named as
+// not included in the result. No note points to a report elsewhere: Sitelemetry
+// keeps none for audits run through the general /mcp endpoint.
+export function findingsNotes(model, { shown, inPrompt }, t) {
+  const stored = Array.isArray(model.findings) ? model.findings.length : 0;
+  const total = typeof model.total === 'number' && model.total > stored ? model.total : stored;
+  const notes = [];
+  if (stored > shown) notes.push(t(inPrompt >= stored ? 'moreFindings' : 'moreFindingsNotShown', [stored - shown]));
+  if (total > stored) notes.push(t(stored ? 'findingsNotIncluded' : 'findingsNoneIncluded', [total - stored]));
+  return notes;
 }
 
 export function kindLabel(id, t) {

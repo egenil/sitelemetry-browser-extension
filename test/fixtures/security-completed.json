@@ -30,7 +30,26 @@
           { "module": "http-headers", "status": "measured" }
         ]
       },
-      "checks": { "counts": { "ok": 12, "warn": 3, "fail": 1, "unmeasured": 0 }, "total": 16, "items": [] }
+      "checks": {
+        "counts": { "ok": 12, "observed": 0, "not_applicable": 0, "manual_review": 0, "skipped": 0, "error": 0, "fail": 0 },
+        "total": 12,
+        "returned": 12,
+        "truncated": false,
+        "items": [
+          { "id": "ok.dns.resolve", "status": "ok", "title": "DNS resolution successful", "evidence": "198.51.100.7", "location": "https://ok.example/" },
+          { "id": "ok.tls.certificate.trusted", "status": "ok", "title": "TLS certificate chain is trusted", "evidence": "issuer=C=US, O=Google Trust Services, CN=WR3", "location": "https://ok.example/" },
+          { "id": "ok.tls.certificate.validity", "status": "ok", "title": "TLS certificate validity is healthy", "evidence": "valid_to=Jan 30 11:02:09 2027 GMT", "location": "https://ok.example/" },
+          { "id": "ok.tls.protocol.modern", "status": "ok", "title": "Modern TLS protocol in use", "evidence": "TLSv1.3", "location": "https://ok.example/" },
+          { "id": "ok.http.header.frame", "status": "ok", "title": "Clickjacking protection present", "evidence": "SAMEORIGIN", "location": "https://ok.example/" },
+          { "id": "ok.http.header.nosniff", "status": "ok", "title": "MIME sniffing protection active", "evidence": "X-Content-Type-Options: nosniff", "location": "https://ok.example/" },
+          { "id": "ok.http.header.referrer-policy", "status": "ok", "title": "Referrer-Policy present", "evidence": "no-referrer-when-downgrade", "location": "https://ok.example/" },
+          { "id": "ok.http.cors.no-wildcard", "status": "ok", "title": "CORS wildcard not used", "evidence": "No CORS origin header", "location": "https://ok.example/" },
+          { "id": "ok.exposure.env", "status": "ok", "title": "/.env is not accessible", "evidence": "HTTP 404; path not found", "location": "https://ok.example/.env" },
+          { "id": "ok.exposure.git-config", "status": "ok", "title": "/.git/config is not accessible", "evidence": "HTTP 404; path not found", "location": "https://ok.example/.git/config" },
+          { "id": "ok.exposure.backup-zip", "status": "ok", "title": "/backup.zip is not accessible", "evidence": "HTTP 404; path not found", "location": "https://ok.example/backup.zip" },
+          { "id": "ok.exposure.wp-config-php-bak", "status": "ok", "title": "/wp-config.php.bak is not accessible", "evidence": "HTTP 404; path not found", "location": "https://ok.example/wp-config.php.bak" }
+        ]
+      }
     },
     "findings": [
       {

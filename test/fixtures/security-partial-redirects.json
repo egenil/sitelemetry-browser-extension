@@ -2,7 +2,7 @@
   "content": [
     {
       "type": "text",
-      "text": "[Security audit - https://redirects.example]\nScore: 86/100 (B)\nFindings: 1 medium, 1 low (2 total) - 38 passing checks\n\nContext:\n- Audit coverage for: Professional."
+      "text": "[Security audit - https://redirects.example]\nScore: 86/100 (B)\nFindings: 1 medium, 1 low (2 total) - 29 passing checks\n\nContext:\n- Audit coverage for: Professional."
     }
   ],
   "structuredContent": {
@@ -16,7 +16,7 @@
     "total": 2,
     "returnedFindings": 2,
     "findingsTruncated": false,
-    "passingChecks": 38,
+    "passingChecks": 29,
     "auditDetails": {
       "scope": {
         "method": "public-signals",
@@ -34,6 +34,55 @@
           { "module": "ports", "status": "partial", "checkCount": 3, "findingCount": 0, "reasons": ["12 timeout/filtered; 0 network error"] },
           { "module": "port-intel", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["12 timeout/filtered; 0 network error"] },
           { "module": "secret-exposure", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["0/7 resource(s) could not be assessed; 7 script(s) remained outside the bounded scan."] }
+        ]
+      },
+      "checks": {
+        "counts": { "ok": 29, "observed": 0, "not_applicable": 0, "manual_review": 0, "skipped": 12, "error": 0, "fail": 0 },
+        "total": 41,
+        "returned": 41,
+        "truncated": false,
+        "items": [
+          { "id": "ok.dns.resolve", "status": "ok", "title": "DNS resolution successful", "evidence": "203.0.113.24, 2001:db8::24", "location": "https://redirects.example/" },
+          { "id": "ok.dns.email.spf", "status": "ok", "title": "SPF record present", "evidence": "v=spf1 include:_spf.mail.example.net -all", "location": "https://redirects.example/" },
+          { "id": "ok.dns.email.dmarc", "status": "ok", "title": "DMARC protection policy active", "evidence": "v=DMARC1; p=reject; rua=mailto:dmarc@redirects.example", "location": "https://redirects.example/" },
+          { "id": "ok.dns.caa", "status": "ok", "title": "CAA certificate policy present", "evidence": "2 CAA records found", "location": "https://redirects.example/" },
+          { "id": "ok.rdap.lookup", "status": "ok", "title": "WHOIS/RDAP domain information verified", "evidence": "source=Verisign RDAP; registrar=Example Registrar, Inc.; expiration=2027-03-14T00:00:00Z; nameserver=2", "location": "" },
+          { "id": "ok.tls.certificate.trusted", "status": "ok", "title": "TLS certificate chain is trusted", "evidence": "issuer=C=US, O=Let's Encrypt, CN=R11", "location": "https://redirects.example/" },
+          { "id": "ok.tls.certificate.validity", "status": "ok", "title": "TLS certificate validity is healthy", "evidence": "valid_to=Dec 12 08:14:33 2026 GMT", "location": "https://redirects.example/" },
+          { "id": "ok.tls.protocol.modern", "status": "ok", "title": "Modern TLS protocol in use", "evidence": "TLSv1.3", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.hsts", "status": "ok", "title": "HSTS active", "evidence": "max-age=63072000; includeSubDomains; preload", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.frame", "status": "ok", "title": "Clickjacking protection present", "evidence": "DENY", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.nosniff", "status": "ok", "title": "MIME sniffing protection active", "evidence": "X-Content-Type-Options: nosniff", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.referrer-policy", "status": "ok", "title": "Referrer-Policy present", "evidence": "strict-origin-when-cross-origin", "location": "https://redirects.example/" },
+          { "id": "ok.http.cors.no-wildcard", "status": "ok", "title": "CORS wildcard not used", "evidence": "No CORS origin header", "location": "https://redirects.example/" },
+          { "id": "ok.mitm.no-mixed-content", "status": "ok", "title": "No mixed-content reference observed", "evidence": "No http:// resource signature found within the HTTPS page", "location": "https://redirects.example/" },
+          { "id": "ok.http.methods.no-dangerous-advertised", "status": "ok", "title": "Risky HTTP methods are not advertised", "evidence": "OPTIONS status=204", "location": "https://redirects.example/" },
+          { "id": "ok.http.trace.disabled", "status": "ok", "title": "TRACE method disabled", "evidence": "TRACE status=405", "location": "https://redirects.example/" },
+          { "id": "ok.http.cors.no-reflection", "status": "ok", "title": "CORS test origin not reflected", "evidence": "ACAO=none", "location": "https://redirects.example/" },
+          { "id": "skip.exposure.env.inconclusive", "status": "skipped", "title": "/.env result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/.env" },
+          { "id": "skip.exposure.git-config.inconclusive", "status": "skipped", "title": "/.git/config result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/.git/config" },
+          { "id": "skip.exposure.backup-zip.inconclusive", "status": "skipped", "title": "/backup.zip result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/backup.zip" },
+          { "id": "ok.api.swagger-json", "status": "ok", "title": "/swagger.json does not appear as a public API document", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/swagger.json" },
+          { "id": "ok.api.openapi-json", "status": "ok", "title": "/openapi.json does not appear as a public API document", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/openapi.json" },
+          { "id": "ok.api.api-docs", "status": "ok", "title": "/api-docs does not appear as a public API document", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/api-docs" },
+          { "id": "ok.api.v2-api-docs", "status": "ok", "title": "/v2/api-docs does not appear as a public API document", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/v2/api-docs" },
+          { "id": "ok.api.graphiql", "status": "ok", "title": "/graphiql does not appear as a public API document", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/graphiql" },
+          { "id": "skip.api.graphql.inconclusive", "status": "skipped", "title": "/graphql result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/graphql" },
+          { "id": "skip.api.api.inconclusive", "status": "skipped", "title": "/api/ result is inconclusive", "evidence": "HTTP 308; redirect was not followed", "location": "https://redirects.example/api/" },
+          { "id": "ok.auth.wp-admin", "status": "ok", "title": "/wp-admin does not appear public", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/wp-admin" },
+          { "id": "ok.auth.phpmyadmin", "status": "ok", "title": "/phpmyadmin does not appear public", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/phpmyadmin" },
+          { "id": "ok.auth.administrator", "status": "ok", "title": "/administrator does not appear public", "evidence": "HTTP 404; path not found", "location": "https://redirects.example/administrator" },
+          { "id": "ok.auth.server-status", "status": "ok", "title": "/server-status is protected", "evidence": "HTTP 403; anonymous access denied", "location": "https://redirects.example/server-status" },
+          { "id": "skip.auth.admin.inconclusive", "status": "skipped", "title": "/admin result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/admin" },
+          { "id": "skip.auth.login.inconclusive", "status": "skipped", "title": "/login/ result is inconclusive", "evidence": "HTTP 308; redirect was not followed", "location": "https://redirects.example/login/" },
+          { "id": "skip.supply-chain.package-json.inconclusive", "status": "skipped", "title": "/package.json result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/package.json" },
+          { "id": "skip.supply-chain.composer-lock.inconclusive", "status": "skipped", "title": "/composer.lock result is inconclusive", "evidence": "HTTP 307; redirect was not followed", "location": "https://redirects.example/composer.lock" },
+          { "id": "ok.ports.risky-closed", "status": "ok", "title": "Risky management/database ports are closed", "evidence": "21, 22, 23, 3306, 3389, 5432, 6379, 27017 ports were not found open", "location": "" },
+          { "id": "ok.ports.closed-summary", "status": "ok", "title": "A portion of the scanned ports are closed", "evidence": "3/15 ports explicitly refused the connection", "location": "" },
+          { "id": "skip.ports.partial", "status": "skipped", "title": "TCP port scan was partial", "evidence": "12 timeout/filtered; 0 network error", "location": "" },
+          { "id": "skip.port-intel.partial-source", "status": "skipped", "title": "Port intelligence coverage was partial", "evidence": "12 timeout/filtered; 0 network error", "location": "" },
+          { "id": "ok.secret-exposure.clean", "status": "ok", "title": "Leaked-secret scan was partially completed", "evidence": "7/7 resource(s), 412904 bytes inspected", "location": "https://redirects.example/" },
+          { "id": "skip.secret-exposure.partial", "status": "skipped", "title": "Leaked-secret scan coverage was partial", "evidence": "0/7 resource(s) could not be assessed; 7 script(s) remained outside the bounded scan.", "location": "https://redirects.example/" }
         ]
       }
     },

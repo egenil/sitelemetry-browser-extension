@@ -93,8 +93,10 @@ body { width: 380px; min-height: 200px; }
 .finding { border-top: 1px solid var(--border); padding: 6px 0; }
 .finding summary { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; list-style: none; }
 .finding summary::-webkit-details-marker { display: none; }
-.finding summary::before { content: "\25B8"; color: var(--muted); font-size: 11px; margin-top: 2px; }
-.finding[open] summary::before { content: "\25BE"; }
+/* The arrows have empty alternative text: the disclosure itself announces whether it
+   is open, so the glyph is not read before the title. */
+.finding summary::before { content: "\25B8" / ""; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.finding[open] summary::before { content: "\25BE" / ""; }
 .finding .title { flex: 1; font-weight: 500; }
 .finding .sev { flex-shrink: 0; }
 .finding-body { padding: 6px 0 2px 18px; font-size: 12px; }
@@ -141,6 +143,32 @@ body { width: 380px; min-height: 200px; }
 .prompt-text:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .offscreen { position: fixed; top: 0; left: -10000px; width: 1px; height: 1px; opacity: 0; }
 
+/* "Passing checks" and "What was not measured" open from their heading: the arrow
+   before it points right while the section is closed and down while it is open. It
+   is not part of the heading's accessible name (empty alternative text), and the
+   content of the section lines up with the heading text after it (10px + 6px gap). */
+.toggle-section summary { display: flex; gap: 6px; align-items: baseline; cursor: pointer; list-style: none; }
+.toggle-section summary::-webkit-details-marker { display: none; }
+.toggle-section summary::before {
+  content: "\25B8" / "";
+  flex-shrink: 0;
+  width: 10px;
+  text-align: center;
+  font-size: 11px;
+  transition: transform 0.15s ease;
+}
+.toggle-section[open] summary::before { transform: rotate(90deg); }
+.toggle-section summary h3 { flex: 1; min-width: 0; font-size: inherit; overflow-wrap: anywhere; }
+.toggle-section summary:hover { color: var(--text); }
+.toggle-section summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  .toggle-section summary::before { transition: none; }
+}
+.toggle-section > :not(summary) { margin-left: 16px; }
+.passing-group { margin-bottom: 8px; min-width: 0; }
+.passing-group h4 { margin: 0 0 2px; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.passing-list li { margin: 3px 0; overflow-wrap: anywhere; }
+.passing-list .passing-evidence { display: block; margin-top: 1px; font-size: 11px; color: var(--muted); word-break: break-word; }
 .nm-list li { margin: 4px 0; overflow-wrap: anywhere; }
 .nm-list .nm-explanation { display: block; margin-top: 2px; }
 .nm-list .nm-detail { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); word-break: break-word; }

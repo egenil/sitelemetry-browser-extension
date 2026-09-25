@@ -1,6 +1,6 @@
 # Privacy policy: Sitelemetry Audit browser extension
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 Sitelemetry Audit is a browser extension for Chrome and Microsoft Edge that runs a security audit of a website you own through your Sitelemetry account. This policy describes what the extension itself sends, stores and never does. The Sitelemetry service (sitelemetry.com) has its own terms and privacy policy, which apply to your account and to the audits recorded on it.
 
@@ -28,7 +28,7 @@ Everything is stored on your device with the browser's local extension storage (
 - Your Sitelemetry MCP API key (shown masked in the settings).
 - The base URL (only if you changed it).
 - The date of your ownership acknowledgement.
-- The last audit result for each site you audited (at most 50 sites). A result contains the score, the findings, the server's text for that site and the report language it was requested in; findings can include URLs and response details of the audited site.
+- The last audit result for each site you audited (at most 50 sites). A result contains the score, the findings, the passing checks (the title and evidence of each check that passed, up to 300 per result), the server's text for that site and the report language it was requested in; findings and passing checks can include URLs and response details of the audited site.
 - A cached copy of the public plan catalogue.
 
 ## Permissions
@@ -46,7 +46,7 @@ Use the extension only on websites you own or are explicitly authorized to test.
 
 ## Deleting your data
 
-Remove the API key in the extension settings, or uninstall the extension: the browser then deletes everything the extension stored. Audit records on your Sitelemetry account are managed in the app at https://sitelemetry.com/app.
+Remove the API key in the extension settings, or uninstall the extension: the browser then deletes everything the extension stored, including the audit results, which the extension keeps only on your device. Your Sitelemetry account, including its usage, is managed in the app at https://sitelemetry.com/app.
 
 ## Children
 

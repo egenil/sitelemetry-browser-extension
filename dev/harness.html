@@ -6,8 +6,12 @@
 
   Serve the repository root (node dev/serve.mjs) and open /dev/harness.html with:
     ?scenario=completed|free|full|quota|plan|verify|consent|unauthorized|forbidden|transport|running|stalled
+                           (completed: 12 passing checks in "Passing checks")
     ?scenario=redirects    partial result of a site that redirects unknown paths to its
-                           sign-in page (307/308) behind a firewall; "What was not measured"
+                           sign-in page (307/308) behind a firewall; "Passing checks" (29, by
+                           module) and "What was not measured"
+    ?scenario=legacy       a result stored by 0.1.2 (no list of passing checks), shown at once
+    ?scenario=many         14 findings sent of 20 counted: the notes under the ten listed, at once
     ?scenario=nokey        no API key stored (setup view)
     ?scenario=notacked     key stored, ownership notice not yet acknowledged
     ?scenario=unsupported  active tab is a browser page
@@ -38,6 +42,8 @@
     <a href="?scenario=running">running</a>
     <a href="?scenario=stalled">stalled (check again)</a>
     <a href="?scenario=redirects">redirects + firewall (not measured)</a>
+    <a href="?scenario=legacy">stored by 0.1.2</a>
+    <a href="?scenario=many">more findings (notes)</a>
     <a href="?scenario=nokey">no key</a>
     <a href="?scenario=notacked">not acknowledged</a>
     <a href="?scenario=unsupported">unsupported page</a>

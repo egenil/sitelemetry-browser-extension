@@ -115,11 +115,36 @@ export function notMeasuredEntries(structured) {
   });
 }
 
+// The checks that passed (status "ok"), as the service lists them in
+// auditDetails.checks.items in the report language, kept with the result so the
+// popup can list them: only what the popup shows (the id, which places the check
+// in its module, the title and the evidence). Bounded by a number of items and of
+// characters, so a large audit keeps the stored result small; the service's
+// passingChecks count still says how many there are, and the popup says how many
+// were counted but not kept.
+export const MAX_PASSING_ITEMS = 300;
+export const MAX_PASSING_CHARS = 40_000;
+
+export function passingEntries(structured) {
+  const items = structured.auditDetails?.checks?.items;
+  const entries = [];
+  let chars = 0;
+  for (const row of Array.isArray(items) ? items : []) {
+    if (row?.status !== 'ok') continue;
+    const entry = { id: clip(row.id, 120), title: clip(row.title, 180), evidence: clip(row.evidence, 300) };
+    if (!entry.title && !entry.id) continue;
+    chars += entry.id.length + entry.title.length + entry.evidence.length;
+    if (entries.length >= MAX_PASSING_ITEMS || chars > MAX_PASSING_CHARS) break;
+    entries.push(entry);
+  }
+  return entries;
+}
+
 function emptyModel(kind, target, tool, jobId) {
   return {
     kind, target, tool: tool || null, jobId: jobId || null, status: 'blocked', reason: null, message: '', httpStatus: null,
     score: null, grade: null, counts: countBySeverity([]), total: 0, returnedFindings: 0, truncated: false,
-    findings: [], pillars: null, notMeasured: [], plan: null, remainingScans: null, reportUrl: null, passingChecks: null
+    findings: [], pillars: null, notMeasured: [], plan: null, remainingScans: null, reportUrl: null, passingChecks: null, passingItems: []
   };
 }
 
@@ -181,7 +206,8 @@ export function interpretOutcome(run, { kind, target }) {
     plan: typeof plan === 'string' ? plan : null,
     remainingScans: numberOrNull(pick(structured, ['usage.remaining.securityScans', 'remainingSecurityScans', 'allowance.remaining.securityScans'])),
     reportUrl: urlOrNull(pick(structured, ['reportUrl', 'report.url', 'links.report'])),
-    passingChecks: numberOrNull(structured.passingChecks)
+    passingChecks: numberOrNull(structured.passingChecks),
+    passingItems: passingEntries(structured)
   };
 }
 

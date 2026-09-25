@@ -2,7 +2,7 @@
   "content": [
     {
       "type": "text",
-      "text": "[Güvenlik denetimi - https://redirects.example]\nPuan: 86/100 (B)\nBulgular: 1 orta, 1 düşük (toplam 2) - 38 başarılı kontrol\n\nBağlam:\n- Denetim kapsamı: Professional."
+      "text": "[Güvenlik denetimi - https://redirects.example]\nPuan: 86/100 (B)\nBulgular: 1 orta, 1 düşük (toplam 2) - 29 başarılı kontrol\n\nBağlam:\n- Denetim kapsamı: Professional."
     }
   ],
   "structuredContent": {
@@ -16,7 +16,7 @@
     "total": 2,
     "returnedFindings": 2,
     "findingsTruncated": false,
-    "passingChecks": 38,
+    "passingChecks": 29,
     "auditDetails": {
       "scope": {
         "method": "public-signals",
@@ -34,6 +34,55 @@
           { "module": "ports", "status": "partial", "checkCount": 3, "findingCount": 0, "reasons": ["12 zaman aşımı/filtreli; 0 ağ hatası"] },
           { "module": "port-intel", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["12 zaman aşımı/filtreli; 0 ağ hatası"] },
           { "module": "secret-exposure", "status": "partial", "checkCount": 1, "findingCount": 0, "reasons": ["0/7 kaynak değerlendirilemedi; 7 betik sınırlı tarama kapsamı dışında kaldı."] }
+        ]
+      },
+      "checks": {
+        "counts": { "ok": 29, "observed": 0, "not_applicable": 0, "manual_review": 0, "skipped": 12, "error": 0, "fail": 0 },
+        "total": 41,
+        "returned": 41,
+        "truncated": false,
+        "items": [
+          { "id": "ok.dns.resolve", "status": "ok", "title": "DNS çözümü başarılı", "evidence": "203.0.113.24, 2001:db8::24", "location": "https://redirects.example/" },
+          { "id": "ok.dns.email.spf", "status": "ok", "title": "SPF kaydı mevcut", "evidence": "v=spf1 include:_spf.mail.example.net -all", "location": "https://redirects.example/" },
+          { "id": "ok.dns.email.dmarc", "status": "ok", "title": "DMARC koruma politikası aktif", "evidence": "v=DMARC1; p=reject; rua=mailto:dmarc@redirects.example", "location": "https://redirects.example/" },
+          { "id": "ok.dns.caa", "status": "ok", "title": "CAA sertifika politikası mevcut", "evidence": "2 CAA kayıt bulundu", "location": "https://redirects.example/" },
+          { "id": "ok.rdap.lookup", "status": "ok", "title": "WHOIS/RDAP domain bilgisi doğrulandı", "evidence": "source=Verisign RDAP; registrar=Example Registrar, Inc.; expiration=2027-03-14T00:00:00Z; nameserver=2", "location": "" },
+          { "id": "ok.tls.certificate.trusted", "status": "ok", "title": "TLS sertifika zinciri güvenilir", "evidence": "issuer=C=US, O=Let's Encrypt, CN=R11", "location": "https://redirects.example/" },
+          { "id": "ok.tls.certificate.validity", "status": "ok", "title": "TLS sertifika süresi sağlıklı", "evidence": "valid_to=Dec 12 08:14:33 2026 GMT", "location": "https://redirects.example/" },
+          { "id": "ok.tls.protocol.modern", "status": "ok", "title": "Modern TLS protokolü kullanılıyor", "evidence": "TLSv1.3", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.hsts", "status": "ok", "title": "HSTS aktif", "evidence": "max-age=63072000; includeSubDomains; preload", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.frame", "status": "ok", "title": "Clickjacking koruması mevcut", "evidence": "DENY", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.nosniff", "status": "ok", "title": "MIME sniffing koruması aktif", "evidence": "X-Content-Type-Options: nosniff", "location": "https://redirects.example/" },
+          { "id": "ok.http.header.referrer-policy", "status": "ok", "title": "Referrer-Policy mevcut", "evidence": "strict-origin-when-cross-origin", "location": "https://redirects.example/" },
+          { "id": "ok.http.cors.no-wildcard", "status": "ok", "title": "CORS wildcard kullanılmıyor", "evidence": "CORS origin header yok", "location": "https://redirects.example/" },
+          { "id": "ok.mitm.no-mixed-content", "status": "ok", "title": "Mixed-content referansı görülmedi", "evidence": "HTTPS sayfa içinde http:// kaynak imzası bulunmadı", "location": "https://redirects.example/" },
+          { "id": "ok.http.methods.no-dangerous-advertised", "status": "ok", "title": "Riskli HTTP metotları ilan edilmiyor", "evidence": "OPTIONS status=204", "location": "https://redirects.example/" },
+          { "id": "ok.http.trace.disabled", "status": "ok", "title": "TRACE metodu kapalı", "evidence": "TRACE status=405", "location": "https://redirects.example/" },
+          { "id": "ok.http.cors.no-reflection", "status": "ok", "title": "CORS test origin yansıtılmadı", "evidence": "ACAO=yok", "location": "https://redirects.example/" },
+          { "id": "skip.exposure.env.inconclusive", "status": "skipped", "title": "/.env sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/.env" },
+          { "id": "skip.exposure.git-config.inconclusive", "status": "skipped", "title": "/.git/config sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/.git/config" },
+          { "id": "skip.exposure.backup-zip.inconclusive", "status": "skipped", "title": "/backup.zip sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/backup.zip" },
+          { "id": "ok.api.swagger-json", "status": "ok", "title": "/swagger.json public API dokümanı olarak görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/swagger.json" },
+          { "id": "ok.api.openapi-json", "status": "ok", "title": "/openapi.json public API dokümanı olarak görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/openapi.json" },
+          { "id": "ok.api.api-docs", "status": "ok", "title": "/api-docs public API dokümanı olarak görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/api-docs" },
+          { "id": "ok.api.v2-api-docs", "status": "ok", "title": "/v2/api-docs public API dokümanı olarak görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/v2/api-docs" },
+          { "id": "ok.api.graphiql", "status": "ok", "title": "/graphiql public API dokümanı olarak görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/graphiql" },
+          { "id": "skip.api.graphql.inconclusive", "status": "skipped", "title": "/graphql sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/graphql" },
+          { "id": "skip.api.api.inconclusive", "status": "skipped", "title": "/api/ sonucu kesinleştirilemedi", "evidence": "HTTP 308; yönlendirme takip edilmedi", "location": "https://redirects.example/api/" },
+          { "id": "ok.auth.wp-admin", "status": "ok", "title": "/wp-admin public görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/wp-admin" },
+          { "id": "ok.auth.phpmyadmin", "status": "ok", "title": "/phpmyadmin public görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/phpmyadmin" },
+          { "id": "ok.auth.administrator", "status": "ok", "title": "/administrator public görünmüyor", "evidence": "HTTP 404; yol bulunamadı", "location": "https://redirects.example/administrator" },
+          { "id": "ok.auth.server-status", "status": "ok", "title": "/server-status korumalı", "evidence": "HTTP 403; anonim erişim reddedildi", "location": "https://redirects.example/server-status" },
+          { "id": "skip.auth.admin.inconclusive", "status": "skipped", "title": "/admin sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/admin" },
+          { "id": "skip.auth.login.inconclusive", "status": "skipped", "title": "/login/ sonucu kesinleştirilemedi", "evidence": "HTTP 308; yönlendirme takip edilmedi", "location": "https://redirects.example/login/" },
+          { "id": "skip.supply-chain.package-json.inconclusive", "status": "skipped", "title": "/package.json sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/package.json" },
+          { "id": "skip.supply-chain.composer-lock.inconclusive", "status": "skipped", "title": "/composer.lock sonucu kesinleştirilemedi", "evidence": "HTTP 307; yönlendirme takip edilmedi", "location": "https://redirects.example/composer.lock" },
+          { "id": "ok.ports.risky-closed", "status": "ok", "title": "Riskli yönetim/veritabanı portları kapalı", "evidence": "21, 22, 23, 3306, 3389, 5432, 6379, 27017 portları açık bulunmadı", "location": "" },
+          { "id": "ok.ports.closed-summary", "status": "ok", "title": "Taranan portların bir bölümü kapalı", "evidence": "3/15 port bağlantıyı açıkça reddetti", "location": "" },
+          { "id": "skip.ports.partial", "status": "skipped", "title": "TCP port taraması kısmi kaldı", "evidence": "12 zaman aşımı/filtreli; 0 ağ hatası", "location": "" },
+          { "id": "skip.port-intel.partial-source", "status": "skipped", "title": "Port intelligence kapsamı kısmi kaldı", "evidence": "12 zaman aşımı/filtreli; 0 ağ hatası", "location": "" },
+          { "id": "ok.secret-exposure.clean", "status": "ok", "title": "Sızdırılmış secret taraması kısmen tamamlandı", "evidence": "7/7 kaynakta 412904 bayt incelendi", "location": "https://redirects.example/" },
+          { "id": "skip.secret-exposure.partial", "status": "skipped", "title": "Sızdırılmış secret taraması kapsamı kısmi kaldı", "evidence": "0/7 kaynak değerlendirilemedi; 7 betik sınırlı tarama kapsamı dışında kaldı.", "location": "https://redirects.example/" }
         ]
       }
     },
