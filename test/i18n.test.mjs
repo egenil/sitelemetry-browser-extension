@@ -192,9 +192,24 @@ test('the notes about findings that are not listed read as facts, not failures',
   }
 });
 
+// The store name and description are shown by the stores, not by the extension: Microsoft
+// Edge Add-ons removes no-break spaces from them, so they use normal spaces (and
+// scripts/validate-manifest.mjs rejects special spaces there). Every other French text keeps them.
+const STORE_FIELDS = new Set(['extensionName', 'extensionDescription']);
+
 test('French keeps no-break spaces before high punctuation and inside guillemets', () => {
   for (const [key, entry] of Object.entries(load('fr'))) {
+    if (STORE_FIELDS.has(key)) continue;
     assert.doesNotMatch(entry.message, / [:;?!»]|« /, `fr/${key}: a line could start with the sign`);
+  }
+});
+
+test('store name and description use normal spaces in every locale', () => {
+  for (const folder of ['en', 'tr', 'es', 'de', 'fr', 'pt_BR', 'pt_PT', 'it', 'ja', 'zh_CN']) {
+    const messages = load(folder);
+    for (const key of STORE_FIELDS) {
+      assert.doesNotMatch(messages[key].message, /[\u00a0\u1680\u2000-\u200f\u2028-\u202f\u205f\u2060\u3000\ufeff]/u, `${folder}/${key}`);
+    }
   }
 });
 

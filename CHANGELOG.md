@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4 - 2026-11-26
+
+- French store description (`extensionDescription` in `_locales/fr`): the no-break space before the colon is a normal space. Microsoft Edge Add-ons removes no-break spaces from the description field and reported it as "Unsupported characters have been removed from the Description field in fr locale"; the text is otherwise unchanged and stays within 132 characters.
+- `npm run check` rejects no-break and other special space characters (U+00A0, U+1680, U+2000-U+200F, U+2028-U+202F, U+205F, U+2060, U+3000, U+FEFF) in the store name and description of every locale. The popup and settings texts keep their typographic spaces.
+- Tests: the French rule that keeps no-break spaces before high punctuation no longer applies to the store name and description, and a new test checks that no locale uses special spaces in them.
+- Store listing copy (docs/STORE-LISTING.md): a "Plans and pricing" paragraph with the price range of paid plans and credit packs, required by the Microsoft Edge Add-ons policy for extensions that show plans, and the listing notes for Edge.
+- No code, permission, host permission, dependency or behaviour change; the content security policy is unchanged.
+
 ## 0.1.3 - 2026-09-26
 
 - Popup: **Passing checks** lists the checks that passed, not only their number ("29 passing checks" under the score is now followed by the checks themselves). Each check is shown as Sitelemetry reported it, in the report language: its title and, in smaller text, its evidence. The checks are grouped by security module with the module names of sitelemetry.com, in the order sitelemetry.com lists the modules, each group heading with its number of checks; a check whose id belongs to no known module goes under "Other checks", last. Only checks with status `ok` are listed; skipped, unavailable and other checks are not. The data is the `auditDetails.checks.items` list Sitelemetry already returns with every `audit_security` result (the general `/mcp` endpoint sends the complete list), so nothing new is requested or sent.

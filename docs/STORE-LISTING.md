@@ -34,8 +34,10 @@ How it works
 Ownership and authorization
 Audit only websites you own or are explicitly authorized to test. Every audit is performed by Sitelemetry against the live site and is recorded on the connected account. The extension asks for an acknowledgement before the first audit.
 
-Plans
-A Free Sitelemetry account includes the security audit with public security modules and a monthly allowance of security scans; each completed audit uses one scan. The popup shows the plan and usage facts of the connected account and links to the plan details when a plan or allowance limit stops an audit. Plan facts come from the public catalogue at sitelemetry.com/api/plans.
+Plans and pricing
+The Free Sitelemetry plan costs nothing. It includes the security audit with public security modules and a monthly allowance of security scans; each completed audit uses one scan. Paid plans cost $49 to $249 per month (Starter, Professional and Enterprise), and one-time audit credit packs cost $4.99 to $39. Plans and credits are bought on sitelemetry.com, not through Microsoft. The popup shows the plan and usage facts of the connected account and links to the plan details when a plan or allowance limit stops an audit. Plan facts come from the public catalogue at sitelemetry.com/api/plans.
+
+(Keep the prices in line with https://sitelemetry.com/api/plans. The Microsoft Edge Add-ons policy asks for the price range of an extension that shows plans or links to purchases; the "not through Microsoft" sentence names the seller. For the Chrome Web Store, say "not through Google" in the same place.)
 
 Privacy
 The extension has no analytics, no content scripts and no access to page content or browsing history. It contacts only the Sitelemetry host configured in its settings (https://sitelemetry.com by default, and the only host the extension is granted access to): the site origin you audit, the audit kind, the report language (the language of your browser) and your API key (as the bearer token) are sent when you click "Audit this site". Your key, your acknowledgement and the last result per site are stored on your device only. The AI fix prompt is built on your device and only copied to your clipboard; nothing is sent. Full policy: see the privacy policy link on this listing.
@@ -46,6 +48,10 @@ Open source under the MIT license.
 
 - Chrome Web Store: Developer Tools
 - Microsoft Edge Add-ons: Developer tools
+
+## What's new in 0.1.4
+
+Paste into the "what changed" note of the update (both stores): The French store description uses a normal space before the colon; Microsoft Edge Add-ons removed the no-break space it had. No change to the extension's behaviour or permissions.
 
 ## What's new in 0.1.3
 
@@ -102,6 +108,10 @@ Run a Sitelemetry security audit of the website in the current tab through the u
 - I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
 **Privacy policy URL**: a public URL of `docs/PRIVACY.md` (for example on the public GitHub repository or a page on sitelemetry.com).
+
+## Microsoft Edge Add-ons: search terms
+
+Up to 7 terms, at most 30 characters each and 21 words in total. Use only terms about the security audit the extension runs; terms about SEO, accessibility or performance describe other Sitelemetry audits, not this extension. English: website security, security audit, site audit, web audit, security headers, SSL certificate check, web security scanner.
 
 ## Microsoft Edge Add-ons: listing fields
 

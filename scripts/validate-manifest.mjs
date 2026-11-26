@@ -93,6 +93,12 @@ export function validateManifest(root) {
     if (text(manifest.name).length > 75) errors.push(`_locales/${folder}: name is longer than 75 characters`);
     const localized = text(manifest.description);
     if (localized.length > 132) errors.push(`_locales/${folder}: description is ${localized.length} characters; the limit is 132`);
+    // Microsoft Edge Add-ons strips no-break and other special spaces from the store name and
+    // description ("Unsupported characters have been removed"), so they are not allowed there.
+    for (const [field, value] of [['name', text(manifest.name)], ['description', localized]]) {
+      const special = [...value].filter((ch) => /[\u00a0\u1680\u2000-\u200f\u2028-\u202f\u205f\u2060\u3000\ufeff]/u.test(ch));
+      if (special.length) errors.push(`_locales/${folder}: store ${field} contains special space characters (${special.map((ch) => 'U+' + ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')).join(', ')}); use a normal space`);
+    }
   }
 
   // Permissions: exactly the expected set, no more.

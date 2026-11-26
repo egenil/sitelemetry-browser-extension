@@ -1,6 +1,6 @@
 {
   "extensionName": { "message": "Sitelemetry Audit", "description": "Extension name shown in the browser and the store." },
-  "extensionDescription": { "message": "Audit de sécurité Sitelemetry du site de l’onglet actif : score, constats et correctifs. Réservé à vos sites ou aux sites autorisés.", "description": "Manifest description, at most 132 characters." },
+  "extensionDescription": { "message": "Audit de sécurité Sitelemetry du site de l’onglet actif : score, constats et correctifs. Réservé à vos sites ou aux sites autorisés.", "description": "Manifest description, at most 132 characters." },
   "actionTitle": { "message": "Sitelemetry Audit", "description": "Tooltip of the toolbar button." },
   "uiLanguageTag": { "message": "fr", "description": "BCP 47 tag of this translation, set as the lang attribute of the popup and the settings page. Not shown; use the tag of this locale (for example pt-BR, zh-CN)." },
 
